@@ -47,7 +47,9 @@
     "searchingText": "جار البحث...",
     "noResultsText": "لم يتم العثور على نتائج. حاول توسيع نطاق البحث.",
     "paperBy": "بواسطة {authors} ({year})",
-    "viewPaperButton": "عرض الورقة"
+    "viewPaperButton": "عرض الورقة",
+    "loadingPapersButton": "جار تحميل الأوراق...",
+    "loadingPapersText": "جار تحميل الأوراق المتاحة..."
   },
   "UploadForm": {
     "title": "رفع ورقة بحثية",

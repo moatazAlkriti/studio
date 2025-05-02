@@ -47,7 +47,9 @@
     "searchingText": "Searching...",
     "noResultsText": "No results found. Try broadening your search.",
     "paperBy": "By {authors} ({year})",
-    "viewPaperButton": "View Paper"
+    "viewPaperButton": "View Paper",
+    "loadingPapersButton": "Loading Papers...",
+    "loadingPapersText": "Loading available papers..."
   },
   "UploadForm": {
     "title": "Upload Research Paper",
