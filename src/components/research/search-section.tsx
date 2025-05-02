@@ -17,14 +17,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Search, FileText } from "lucide-react"
 import { useState } from "react"
 import { Separator } from "@/components/ui/separator"
+import { useTranslations } from "next-intl";
 
-const searchSchema = z.object({
+// Schema generation function
+const getSearchSchema = (t: ReturnType<typeof useTranslations<'SearchSection'>>) => z.object({
   keywords: z.string().optional(),
   author: z.string().optional(),
   year: z.string().optional().refine((val) => !val || /^\d{4}$/.test(val), {
-    message: "Year must be a 4-digit number.",
+    message: t('yearError'),
   }),
-})
+});
 
 // Dummy data for search results
 const dummyResults = [
@@ -36,8 +38,12 @@ const dummyResults = [
 type SearchResult = typeof dummyResults[0];
 
 export function SearchSection() {
+  const t = useTranslations('SearchSection');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Create schema with translations
+  const searchSchema = getSearchSchema(t);
 
   const form = useForm<z.infer<typeof searchSchema>>({
     resolver: zodResolver(searchSchema),
@@ -68,8 +74,8 @@ export function SearchSection() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Search Research Papers</CardTitle>
-        <CardDescription>Find papers by keywords, author, or publication year.</CardDescription>
+        <CardTitle>{t('title')}</CardTitle>
+        <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -80,9 +86,9 @@ export function SearchSection() {
                 name="keywords"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Keywords</FormLabel>
+                    <FormLabel>{t('keywordsLabel')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., machine learning, climate change" {...field} />
+                      <Input placeholder={t('keywordsPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -93,9 +99,9 @@ export function SearchSection() {
                 name="author"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Author</FormLabel>
+                    <FormLabel>{t('authorLabel')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., John Doe" {...field} />
+                      <Input placeholder={t('authorPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,9 +112,9 @@ export function SearchSection() {
                 name="year"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Publication Year</FormLabel>
+                    <FormLabel>{t('yearLabel')}</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 2023" {...field} />
+                      <Input type="number" placeholder={t('yearPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -116,16 +122,16 @@ export function SearchSection() {
               />
             </div>
             <Button type="submit" disabled={isSearching} className="w-full md:w-auto">
-              <Search className="mr-2 h-4 w-4" /> {isSearching ? "Searching..." : "Search"}
+              <Search className="mr-2 h-4 w-4" /> {isSearching ? t('searchingButton') : t('searchButton')}
             </Button>
           </form>
         </Form>
 
         <Separator className="my-8" />
 
-        <h3 className="text-lg font-semibold mb-4">Search Results</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('resultsTitle')}</h3>
         {isSearching ? (
-          <p className="text-muted-foreground">Searching...</p>
+          <p className="text-muted-foreground">{t('searchingText')}</p>
         ) : searchResults.length > 0 ? (
           <div className="space-y-4">
             {searchResults.map((result) => (
@@ -136,21 +142,21 @@ export function SearchSection() {
                     {result.title}
                   </CardTitle>
                   <CardDescription>
-                    By {result.authors} ({result.year})
+                    {t('paperBy', { authors: result.authors, year: result.year })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-3">{result.abstract}</p>
                   {/* Add a link/button to view the full paper if available */}
                    <Button variant="link" size="sm" className="p-0 h-auto mt-2">
-                     View Paper
+                     {t('viewPaperButton')}
                    </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground">No results found. Try broadening your search.</p>
+          <p className="text-muted-foreground">{t('noResultsText')}</p>
         )}
       </CardContent>
     </Card>

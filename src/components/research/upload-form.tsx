@@ -19,31 +19,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast"
 import { Upload } from "lucide-react"
 import { useState, type ChangeEvent } from "react"
+import { useTranslations } from "next-intl";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
-const formSchema = z.object({
+// Schema generation function
+const getFormSchema = (t: ReturnType<typeof useTranslations<'UploadForm'>>) => z.object({
   title: z.string().min(2, {
-    message: "Title must be at least 2 characters.",
+    message: t('paperTitleError'),
   }),
   authors: z.string().min(2, {
-    message: "Authors must be at least 2 characters.",
-  }).describe("Comma-separated list of authors"),
+    message: t('authorsError'),
+  }).describe(t('authorsDescription')), // Adding description for potential tooltips or hints
   abstract: z.string().min(10, {
-    message: "Abstract must be at least 10 characters.",
+    message: t('abstractError'),
   }),
   file: z.any()
-    .refine((file) => file?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine((file) => file?.size <= MAX_FILE_SIZE, t('fileSizeError'))
     .refine(
       (file) => ACCEPTED_FILE_TYPES.includes(file?.type),
-      "Only .pdf files are accepted."
+      t('fileTypeError')
     ),
-})
+});
 
 export function UploadForm() {
+  const t = useTranslations('UploadForm');
   const { toast } = useToast()
   const [fileName, setFileName] = useState<string | null>(null);
+
+  // Create schema with translations
+  const formSchema = getFormSchema(t);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,8 +66,8 @@ export function UploadForm() {
     console.log("Form submitted:", values)
     // In a real app, you would handle file upload and data saving here
     toast({
-      title: "Paper Uploaded",
-      description: `"${values.title}" has been submitted.`,
+      title: t('uploadSuccessTitle'),
+      description: t('uploadSuccessDescription', { title: values.title }),
     })
     form.reset()
     setFileName(null)
@@ -80,8 +87,8 @@ export function UploadForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upload Research Paper</CardTitle>
-        <CardDescription>Fill in the details and upload your research paper (PDF only).</CardDescription>
+        <CardTitle>{t('title')}</CardTitle>
+        <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -91,9 +98,9 @@ export function UploadForm() {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>{t('paperTitleLabel')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter the paper title" {...field} />
+                    <Input placeholder={t('paperTitlePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -104,12 +111,12 @@ export function UploadForm() {
               name="authors"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Authors</FormLabel>
+                  <FormLabel>{t('authorsLabel')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., John Doe, Jane Smith" {...field} />
+                    <Input placeholder={t('authorsPlaceholder')} {...field} />
                   </FormControl>
                   <FormDescription>
-                    Comma-separated list of authors.
+                    {t('authorsDescription')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -120,10 +127,10 @@ export function UploadForm() {
               name="abstract"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Abstract</FormLabel>
+                  <FormLabel>{t('abstractLabel')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter the paper abstract"
+                      placeholder={t('abstractPlaceholder')}
                       className="resize-none"
                       {...field}
                       rows={5}
@@ -138,7 +145,7 @@ export function UploadForm() {
               name="file"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Research Paper (PDF)</FormLabel>
+                  <FormLabel>{t('fileLabel')}</FormLabel>
                   <FormControl>
                     <Input
                       type="file"
@@ -152,17 +159,17 @@ export function UploadForm() {
                     />
                   </FormControl>
                    <Button type="button" variant="outline" className="w-full" onClick={() => document.getElementById('file-upload')?.click()}>
-                     <Upload className="mr-2 h-4 w-4" /> {fileName ? `Selected: ${fileName}` : "Choose PDF File"}
+                     <Upload className="mr-2 h-4 w-4" /> {fileName ? t('selectedFileButton', { fileName }) : t('chooseFileButton')}
                    </Button>
                   <FormDescription>
-                    Max file size: 5MB.
+                    {t('fileDescription')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" className="w-full">
-              <Upload className="mr-2 h-4 w-4" /> Upload Paper
+              <Upload className="mr-2 h-4 w-4" /> {t('uploadButton')}
             </Button>
           </form>
         </Form>

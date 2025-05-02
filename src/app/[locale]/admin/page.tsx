@@ -1,4 +1,3 @@
-// src/app/admin/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -19,6 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ShieldCheck, Users, UserPlus, Trash2 } from "lucide-react";
 import { Separator } from '@/components/ui/separator';
+import { useTranslations } from 'next-intl';
 
 // --- Data Structures ---
 
@@ -65,18 +65,21 @@ const initialUsers: ManagedUser[] = [
 ];
 
 // --- Zod Schema for Add User Form ---
-const addUserSchema = z.object({
-  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
-  // In a real app, you might add role selection here
+const getAddUserSchema = (t: ReturnType<typeof useTranslations<'AdminPage'>>) => z.object({
+  username: z.string().min(3, { message: t('usernameError') }),
+  password: z.string().min(6, { message: t('passwordError') }),
 });
 
 // --- Admin Page Component ---
 
 export default function AdminPage() {
+  const t = useTranslations('AdminPage');
   const { toast } = useToast();
   const [users, setUsers] = useState<ManagedUser[]>(initialUsers);
   const [isAddingUser, setIsAddingUser] = useState(false);
+
+  // Dynamically create the schema with translations
+  const addUserSchema = getAddUserSchema(t);
 
   // --- Add User Form Handling ---
   const addUserForm = useForm<z.infer<typeof addUserSchema>>({
@@ -98,8 +101,8 @@ export default function AdminPage() {
       };
       setUsers(prevUsers => [...prevUsers, newUser]);
       toast({
-        title: 'User Added',
-        description: `User "${values.username}" has been added.`,
+        title: t('userAddedTitle'),
+        description: t('userAddedDescription', { username: values.username }),
       });
       addUserForm.reset();
       setIsAddingUser(false);
@@ -111,19 +114,18 @@ export default function AdminPage() {
     // Simulate deletion (in a real app, call an API)
     setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     toast({
-      title: 'User Deleted',
-      description: `User "${username}" has been removed.`,
+      title: t('userDeletedTitle'),
+      description: t('userDeletedDescription', { username }),
       variant: 'destructive'
     });
   };
-
 
   // --- Render ---
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
          <h1 className="text-2xl font-bold flex items-center">
-           <ShieldCheck className="mr-2 h-6 w-6 text-primary animate-pulse" /> Admin Dashboard
+           <ShieldCheck className="mr-2 h-6 w-6 text-primary animate-pulse" /> {t('dashboardTitle')}
          </h1>
          {/* Add maybe a settings button or other global admin actions here */}
       </div>
@@ -132,15 +134,15 @@ export default function AdminPage() {
       {/* Manage Users Card */}
       <Card className="transition-shadow duration-300 hover:shadow-lg">
         <CardHeader>
-          <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5" /> Manage Users</CardTitle>
-          <CardDescription>Add, view, and remove user accounts.</CardDescription>
+          <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5" /> {t('manageUsersTitle')}</CardTitle>
+          <CardDescription>{t('manageUsersDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Add User Form */}
           <Form {...addUserForm}>
             <form onSubmit={addUserForm.handleSubmit(onAddUserSubmit)} className="space-y-4 p-4 border rounded-md bg-muted/50">
                <h3 className="text-lg font-semibold flex items-center mb-2">
-                  <UserPlus className="mr-2 h-4 w-4"/> Add New User
+                  <UserPlus className="mr-2 h-4 w-4"/> {t('addNewUserTitle')}
                </h3>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                   <FormField
@@ -148,9 +150,9 @@ export default function AdminPage() {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>{t('usernameLabel')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., new.user" {...field} />
+                          <Input placeholder={t('usernamePlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -161,16 +163,16 @@ export default function AdminPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>{t('passwordLabel')}</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="******" {...field} />
+                          <Input type="password" placeholder={t('passwordPlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                  <Button type="submit" disabled={isAddingUser} className="w-full md:w-auto transition-colors duration-200">
-                   {isAddingUser ? 'Adding...' : 'Add User'}
+                   {isAddingUser ? t('addingUserButton') : t('addUserButton')}
                  </Button>
                </div>
             </form>
@@ -180,7 +182,7 @@ export default function AdminPage() {
 
           {/* User List */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Current Users</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('currentUsersTitle')}</h3>
             {users.length > 0 ? (
               <ul className="space-y-3">
                 {users.map(user => (
@@ -195,7 +197,7 @@ export default function AdminPage() {
                        size="icon"
                        className="text-destructive hover:bg-destructive/10 transition-colors duration-200"
                        onClick={() => handleDeleteUser(user.id, user.username)}
-                       aria-label={`Delete user ${user.username}`}
+                       aria-label={t('deleteUserLabel', { username: user.username })}
                     >
                        <Trash2 className="h-4 w-4" />
                     </Button>
@@ -203,7 +205,7 @@ export default function AdminPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-muted-foreground italic text-center py-4">No users found (except the default admin).</p>
+              <p className="text-muted-foreground italic text-center py-4">{t('noUsersFound')}</p>
             )}
           </div>
         </CardContent>
@@ -213,16 +215,16 @@ export default function AdminPage() {
       {/* Existing Manage Categories Card */}
       <Card className="transition-shadow duration-300 hover:shadow-lg">
         <CardHeader>
-          <CardTitle>Manage Categories</CardTitle>
-          <CardDescription>Add, edit, or remove research disciplines.</CardDescription>
+          <CardTitle>{t('manageCategoriesTitle')}</CardTitle>
+          <CardDescription>{t('manageCategoriesDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground italic">Category management functionality to be implemented here.</p>
+          <p className="text-muted-foreground italic">{t('categoryManagementPlaceholder')}</p>
           <ul className="mt-4 space-y-2">
             {dummyCategories.map(cat => (
               <li key={cat.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
                 <span>{cat.name}</span>
-                <span className="text-sm text-muted-foreground">{cat.paperCount} papers</span>
+                <span className="text-sm text-muted-foreground">{t('papersCount', { count: cat.paperCount })}</span>
                 {/* Add Edit/Delete buttons if needed */}
               </li>
             ))}
@@ -234,19 +236,19 @@ export default function AdminPage() {
       {/* Existing Manage Papers Card */}
       <Card className="transition-shadow duration-300 hover:shadow-lg">
         <CardHeader>
-          <CardTitle>Manage Papers & Access Control</CardTitle>
-          <CardDescription>Set categories and access levels for uploaded papers.</CardDescription>
+          <CardTitle>{t('managePapersTitle')}</CardTitle>
+          <CardDescription>{t('managePapersDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
-           <p className="text-muted-foreground italic">Paper categorization and access control functionality to be implemented here.</p>
+           <p className="text-muted-foreground italic">{t('paperManagementPlaceholder')}</p>
            <ul className="mt-4 space-y-3">
              {dummyPapers.map(paper => (
                <li key={paper.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
                  <span className="flex-1 mr-4 truncate">{paper.title}</span>
                  <div className="flex items-center space-x-3 flex-shrink-0">
-                    <span className="text-sm text-muted-foreground hidden sm:inline">{paper.category || 'Uncategorized'}</span>
+                    <span className="text-sm text-muted-foreground hidden sm:inline">{paper.category || t('uncategorized')}</span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded ${paper.accessLevel === 'public' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
-                      {paper.accessLevel}
+                      {t(paper.accessLevel === 'public' ? 'publicAccess' : 'privateAccess')}
                     </span>
                     {/* Add Edit/Permissions buttons if needed */}
                  </div>

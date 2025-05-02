@@ -17,10 +17,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { LogIn } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
-const formSchema = z.object({
-  username: z.string().min(1, { message: 'Username is required.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
+// Schema generation function
+const getFormSchema = (t: ReturnType<typeof useTranslations<'LoginPage'>>) => z.object({
+  username: z.string().min(1, { message: t('usernameRequiredError') }),
+  password: z.string().min(1, { message: t('passwordRequiredError') }),
 });
 
 interface LoginFormProps {
@@ -28,8 +30,12 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
+  const t = useTranslations('LoginPage');
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Create schema with translations
+  const formSchema = getFormSchema(t);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,8 +52,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       // Simple check for admin user
       if (values.username === 'admin' && values.password === 'admin') {
         toast({
-          title: 'Login Successful',
-          description: `Welcome, ${values.username}!`,
+          title: t('loginSuccessTitle'),
+          description: t('loginSuccessDescription', { username: values.username }),
         });
         // Store login status and username (for header check)
         if (typeof window !== 'undefined') {
@@ -59,11 +65,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         // Handle other users or invalid login
         toast({
           variant: 'destructive',
-          title: 'Login Failed',
-          description: 'Invalid username or password.',
+          title: t('loginFailedTitle'),
+          description: t('loginFailedDescription'),
         });
         form.setError('username', { type: 'manual', message: ' ' }); // Add error without specific message
-        form.setError('password', { type: 'manual', message: 'Invalid credentials' });
+        form.setError('password', { type: 'manual', message: t('invalidCredentialsError') });
         form.setValue('password', ''); // Clear password field
         // Clear stored username if login fails
         if (typeof window !== 'undefined') {
@@ -77,8 +83,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   return (
     <Card className="w-full max-w-sm mx-auto animate-fade-in"> {/* Added subtle fade-in animation */}
       <CardHeader>
-        <CardTitle className="text-2xl">Login</CardTitle>
-        <CardDescription>Enter username 'admin' and password 'admin' to access the Research Hub.</CardDescription>
+        <CardTitle className="text-2xl">{t('title')}</CardTitle>
+        <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -88,9 +94,9 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>{t('usernameLabel')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="admin" {...field} />
+                    <Input placeholder={t('usernamePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,16 +107,16 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t('passwordLabel')}</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="admin" {...field} />
+                    <Input type="password" placeholder={t('passwordPlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" className="w-full transition-transform duration-200 hover:scale-[1.02]" disabled={isLoading}>
-              <LogIn className="mr-2 h-4 w-4" /> {isLoading ? 'Logging in...' : 'Login'}
+              <LogIn className="mr-2 h-4 w-4" /> {isLoading ? t('loggingInButton') : t('loginButton')}
             </Button>
           </form>
         </Form>
