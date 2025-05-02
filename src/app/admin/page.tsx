@@ -1,19 +1,50 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck } from "lucide-react";
+// src/app/admin/page.tsx
+'use client';
 
-// Placeholder data structures - replace with actual data fetching and types
+import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { ShieldCheck, Users, UserPlus, Trash2 } from "lucide-react";
+import { Separator } from '@/components/ui/separator';
+
+// --- Data Structures ---
+
+// Category data (remains the same)
 interface PaperCategory {
   id: string;
   name: string;
   paperCount: number;
 }
 
+// Paper data (remains the same)
 interface ResearchPaperAdmin {
   id: string;
   title: string;
   category?: string;
   accessLevel: 'public' | 'private';
 }
+
+// NEW: User data structure
+interface ManagedUser {
+  id: string;
+  username: string;
+  role: 'admin' | 'editor' | 'viewer'; // Example roles
+}
+
+// --- Dummy Data ---
 
 const dummyCategories: PaperCategory[] = [
   { id: 'cs', name: 'Computer Science', paperCount: 15 },
@@ -27,56 +58,202 @@ const dummyPapers: ResearchPaperAdmin[] = [
   { id: '3', title: 'Study on AI Ethics', category: 'Computer Science', accessLevel: 'public' },
 ];
 
-export default function AdminPage() {
-  // In a real app, you'd fetch categories and papers,
-  // and implement forms/actions to manage them.
+// Initial dummy users - IMPORTANT: Do not include the default 'admin' here unless you want it deletable
+const initialUsers: ManagedUser[] = [
+  { id: 'user-1', username: 'jane.doe', role: 'editor' },
+  { id: 'user-2', username: 'john.smith', role: 'viewer' },
+];
 
+// --- Zod Schema for Add User Form ---
+const addUserSchema = z.object({
+  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  // In a real app, you might add role selection here
+});
+
+// --- Admin Page Component ---
+
+export default function AdminPage() {
+  const { toast } = useToast();
+  const [users, setUsers] = useState<ManagedUser[]>(initialUsers);
+  const [isAddingUser, setIsAddingUser] = useState(false);
+
+  // --- Add User Form Handling ---
+  const addUserForm = useForm<z.infer<typeof addUserSchema>>({
+    resolver: zodResolver(addUserSchema),
+    defaultValues: {
+      username: '',
+      password: '',
+    },
+  });
+
+  function onAddUserSubmit(values: z.infer<typeof addUserSchema>) {
+    setIsAddingUser(true);
+    // Simulate adding user (in a real app, call an API)
+    setTimeout(() => {
+      const newUser: ManagedUser = {
+        id: `user-${Date.now()}`, // Simple unique ID generation
+        username: values.username,
+        role: 'viewer', // Default role for newly added users
+      };
+      setUsers(prevUsers => [...prevUsers, newUser]);
+      toast({
+        title: 'User Added',
+        description: `User "${values.username}" has been added.`,
+      });
+      addUserForm.reset();
+      setIsAddingUser(false);
+    }, 500); // Simulate network delay
+  }
+
+  // --- Delete User Handling ---
+  const handleDeleteUser = (userId: string, username: string) => {
+    // Simulate deletion (in a real app, call an API)
+    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+    toast({
+      title: 'User Deleted',
+      description: `User "${username}" has been removed.`,
+      variant: 'destructive'
+    });
+  };
+
+
+  // --- Render ---
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold flex items-center">
-        <ShieldCheck className="mr-2 h-6 w-6 text-primary" /> Admin Dashboard
-      </h1>
+      <div className="flex items-center justify-between">
+         <h1 className="text-2xl font-bold flex items-center">
+           <ShieldCheck className="mr-2 h-6 w-6 text-primary animate-pulse" /> Admin Dashboard
+         </h1>
+         {/* Add maybe a settings button or other global admin actions here */}
+      </div>
 
-      <Card>
+
+      {/* Manage Users Card */}
+      <Card className="transition-shadow duration-300 hover:shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5" /> Manage Users</CardTitle>
+          <CardDescription>Add, view, and remove user accounts.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Add User Form */}
+          <Form {...addUserForm}>
+            <form onSubmit={addUserForm.handleSubmit(onAddUserSubmit)} className="space-y-4 p-4 border rounded-md bg-muted/50">
+               <h3 className="text-lg font-semibold flex items-center mb-2">
+                  <UserPlus className="mr-2 h-4 w-4"/> Add New User
+               </h3>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <FormField
+                    control={addUserForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., new.user" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addUserForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="******" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                 <Button type="submit" disabled={isAddingUser} className="w-full md:w-auto transition-colors duration-200">
+                   {isAddingUser ? 'Adding...' : 'Add User'}
+                 </Button>
+               </div>
+            </form>
+          </Form>
+
+          <Separator />
+
+          {/* User List */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Current Users</h3>
+            {users.length > 0 ? (
+              <ul className="space-y-3">
+                {users.map(user => (
+                  <li key={user.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
+                    <div className="flex flex-col">
+                       <span className="font-medium">{user.username}</span>
+                       <span className="text-sm text-muted-foreground capitalize">{user.role}</span>
+                    </div>
+                    {/* Add Edit button later if needed */}
+                    <Button
+                       variant="ghost"
+                       size="icon"
+                       className="text-destructive hover:bg-destructive/10 transition-colors duration-200"
+                       onClick={() => handleDeleteUser(user.id, user.username)}
+                       aria-label={`Delete user ${user.username}`}
+                    >
+                       <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground italic text-center py-4">No users found (except the default admin).</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+
+      {/* Existing Manage Categories Card */}
+      <Card className="transition-shadow duration-300 hover:shadow-lg">
         <CardHeader>
           <CardTitle>Manage Categories</CardTitle>
           <CardDescription>Add, edit, or remove research disciplines.</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Placeholder for category management UI */}
           <p className="text-muted-foreground italic">Category management functionality to be implemented here.</p>
           <ul className="mt-4 space-y-2">
             {dummyCategories.map(cat => (
-              <li key={cat.id} className="flex justify-between items-center p-2 border rounded">
+              <li key={cat.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
                 <span>{cat.name}</span>
                 <span className="text-sm text-muted-foreground">{cat.paperCount} papers</span>
+                {/* Add Edit/Delete buttons if needed */}
               </li>
             ))}
           </ul>
+          {/* Add form for adding/editing categories */}
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Existing Manage Papers Card */}
+      <Card className="transition-shadow duration-300 hover:shadow-lg">
         <CardHeader>
           <CardTitle>Manage Papers & Access Control</CardTitle>
           <CardDescription>Set categories and access levels for uploaded papers.</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Placeholder for paper management UI */}
            <p className="text-muted-foreground italic">Paper categorization and access control functionality to be implemented here.</p>
-           <ul className="mt-4 space-y-2">
+           <ul className="mt-4 space-y-3">
              {dummyPapers.map(paper => (
-               <li key={paper.id} className="flex justify-between items-center p-2 border rounded">
-                 <span>{paper.title}</span>
-                 <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">{paper.category || 'Uncategorized'}</span>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded ${paper.accessLevel === 'public' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+               <li key={paper.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
+                 <span className="flex-1 mr-4 truncate">{paper.title}</span>
+                 <div className="flex items-center space-x-3 flex-shrink-0">
+                    <span className="text-sm text-muted-foreground hidden sm:inline">{paper.category || 'Uncategorized'}</span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded ${paper.accessLevel === 'public' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
                       {paper.accessLevel}
                     </span>
+                    {/* Add Edit/Permissions buttons if needed */}
                  </div>
                </li>
              ))}
            </ul>
+           {/* Add form/controls for managing papers */}
         </CardContent>
       </Card>
     </div>
