@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BookOpenText, ShieldCheck, Globe, LogOut } from 'lucide-react';
+import { BookOpenText, ShieldCheck, Globe, LogOut, Info } from 'lucide-react'; // Added Info icon
 import { Link, usePathname, useRouter } from '@/navigation'; // Use navigation hook
 import { Button } from '@/components/ui/button';
 import {
@@ -65,7 +65,7 @@ export function Header() {
              <span className="font-bold text-lg">{t('brandName')}</span>
            </Link>
            {/* Placeholder while loading */}
-           <div className="h-8 w-20 bg-muted rounded animate-pulse"></div>
+           <div className="h-8 w-32 bg-muted rounded animate-pulse"></div> {/* Adjusted width */}
          </div>
        </header>
     );
@@ -83,13 +83,21 @@ export function Header() {
         {/* Navigation Items & Actions */}
         <nav className="flex items-center space-x-2">
           {isLoggedIn && isAdmin && ( // Show only if logged in as admin
-            <Button asChild variant="ghost" className="transition-colors duration-200">
+            <Button asChild variant="ghost" size="sm" className="transition-colors duration-200 hidden sm:inline-flex">
               <Link href="/admin" className="flex items-center">
                 <ShieldCheck className="mr-1 h-4 w-4" />
                 {t('adminLink')}
               </Link>
             </Button>
           )}
+
+          {/* About Us Link */}
+           <Button asChild variant="ghost" size="sm" className="transition-colors duration-200">
+             <Link href="/about" className="flex items-center">
+               <Info className="mr-1 h-4 w-4" />
+               {t('aboutUsLink')}
+             </Link>
+           </Button>
 
           {/* Language Switcher */}
           <DropdownMenu>

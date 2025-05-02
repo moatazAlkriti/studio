@@ -13,6 +13,7 @@ export const pathnames = {
   // the usual string syntax
   '/': '/',
   '/admin': '/admin',
+  '/about': '/about', // Added about path
 
   // If locales use different paths, use an object
 //   '/about': {

@@ -23,7 +23,8 @@
     "language": "Language",
     "english": "English",
     "arabic": "Arabic",
-    "logout": "Logout"
+    "logout": "Logout",
+    "aboutUsLink": "About Us"
   },
   "HomePage": {
     "searchTab": "Search Papers",
@@ -105,5 +106,17 @@
     "title": "Page Not Found",
     "description": "Sorry, the page you are looking for does not exist or may have been moved.",
     "goHomeButton": "Go back home"
+  },
+  "AboutPage": {
+    "title": "About Research Hub",
+    "description": "Learn more about our mission and features.",
+    "missionTitle": "Our Mission",
+    "missionText": "Research Hub aims to provide a centralized and accessible platform for researchers to share, discover, and collaborate on academic papers across various disciplines. We strive to foster a community of knowledge sharing and innovation.",
+    "featuresTitle": "Key Features",
+    "featureUpload": "Seamlessly upload research papers with relevant metadata (title, authors, abstract).",
+    "featureSearch": "Utilize advanced search capabilities to find papers by keywords, authors, or publication year.",
+    "featureAdmin": "Admin tools for categorizing papers by discipline and managing user access levels (public/private).",
+    "contactTitle": "Contact Us",
+    "contactText": "Have questions or feedback? Reach out to us at"
   }
 }
