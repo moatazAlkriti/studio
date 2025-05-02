@@ -159,5 +159,26 @@
     "unknownPaperTitle": "هذه الورقة",
     "localStorageErrorTitle": "خطأ في التخزين",
     "localStorageWriteErrorDescription": "تعذر حفظ التغييرات في التخزين المحلي."
+  },
+  "EditPaperForm": {
+    "dialogTitle": "تعديل تفاصيل الورقة",
+    "dialogDescription": "قم بتعديل البيانات الوصفية للورقة المحددة. لا يمكن تغيير محتوى الملف.",
+    "paperTitleLabel": "العنوان",
+    "paperTitlePlaceholder": "أدخل عنوان الورقة الجديد",
+    "paperTitleError": "يجب أن يكون العنوان مكونًا من حرفين على الأقل.",
+    "authorsLabel": "المؤلفون",
+    "authorsPlaceholder": "مثال: جون دو، جين سميث",
+    "authorsDescription": "قائمة المؤلفين مفصولة بفواصل.",
+    "authorsError": "يجب أن يكون اسم المؤلفين مكونًا من حرفين على الأقل.",
+    "abstractLabel": "الملخص",
+    "abstractPlaceholder": "أدخل ملخص الورقة الجديد",
+    "abstractError": "يجب أن يكون الملخص مكونًا من 10 أحرف على الأقل.",
+    "saveButton": "حفظ التغييرات",
+    "savingButton": "جار الحفظ...",
+    "cancelButton": "إلغاء",
+    "editSuccessTitle": "تم تحديث الورقة",
+    "editSuccessDescription": "تم تحديث البيانات الوصفية لـ \"{title}\".",
+    "editErrorTitle": "فشل التحديث",
+    "editErrorDescription": "تعذر تحديث البيانات الوصفية للورقة. يرجى المحاولة مرة أخرى."
   }
 }

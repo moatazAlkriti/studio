@@ -159,5 +159,26 @@
     "unknownPaperTitle": "this paper",
     "localStorageErrorTitle": "Storage Error",
     "localStorageWriteErrorDescription": "Could not save changes to local storage."
+  },
+  "EditPaperForm": {
+    "dialogTitle": "Edit Paper Details",
+    "dialogDescription": "Modify the metadata for the selected paper. File content cannot be changed.",
+    "paperTitleLabel": "Title",
+    "paperTitlePlaceholder": "Enter the new paper title",
+    "paperTitleError": "Title must be at least 2 characters.",
+    "authorsLabel": "Authors",
+    "authorsPlaceholder": "e.g., John Doe, Jane Smith",
+    "authorsDescription": "Comma-separated list of authors.",
+    "authorsError": "Authors must be at least 2 characters.",
+    "abstractLabel": "Abstract",
+    "abstractPlaceholder": "Enter the new paper abstract",
+    "abstractError": "Abstract must be at least 10 characters.",
+    "saveButton": "Save Changes",
+    "savingButton": "Saving...",
+    "cancelButton": "Cancel",
+    "editSuccessTitle": "Paper Updated",
+    "editSuccessDescription": "Metadata for \"{title}\" has been updated.",
+    "editErrorTitle": "Update Failed",
+    "editErrorDescription": "Could not update the paper metadata. Please try again."
   }
 }

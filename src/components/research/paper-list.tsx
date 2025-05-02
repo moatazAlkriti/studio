@@ -20,9 +20,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { format } from 'date-fns'; // For formatting date
+import { EditPaperForm, type EditPaperData } from "./edit-paper-form"; // Import the new Edit form
 
 // Type for paper data stored in localStorage (must match UploadForm)
-interface StoredPaper {
+// Keep consistent with other components
+export interface StoredPaper {
     id: string;
     title: string;
     authors: string;
@@ -44,13 +46,15 @@ type Paper = StoredPaper;
 
 export function PaperList() {
   const t = useTranslations('PaperList');
-  const tSearch = useTranslations('SearchSection'); // Reuse translations if needed
+  const tEdit = useTranslations('EditPaperForm'); // Translations for the edit form
   const { toast } = useToast();
   const [papers, setPapers] = useState<Paper[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [paperToDelete, setPaperToDelete] = useState<Paper | null>(null); // State for delete confirmation
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
+  const [editingPaper, setEditingPaper] = useState<Paper | null>(null); // State for paper being edited
 
   useEffect(() => {
     // Ensure this runs only on the client
@@ -87,7 +91,7 @@ export function PaperList() {
     }
   }, []); // Run only once on mount
 
-   // Update local storage when papers change (e.g., after delete)
+   // Update local storage when papers change (e.g., after delete or edit)
    useEffect(() => {
      if (isClient && !isLoading) { // Only run on client after initial load/modification
        try {
@@ -101,19 +105,37 @@ export function PaperList() {
            })
        }
      }
-   }, [papers, isClient, isLoading, t]);
+   }, [papers, isClient, isLoading, t, toast]); // Added toast to dependency array
 
-  const handleEditPaper = (paperId: string) => {
-    // Simulate edit action (e.g., open a modal or navigate to an edit page)
-    // In a real app, you might pass the paper data to the modal/page
-    const paperToEdit = papers.find(p => p.id === paperId);
-    console.log(`Edit paper:`, paperToEdit);
-    toast({
-      title: t('editPaperTitle'),
-      description: t('editPaperDescription', { paperId }),
-    });
-    // TODO: Implement actual edit functionality (e.g., open Modal with form)
+  const handleEditPaper = (paper: Paper) => {
+    setEditingPaper(paper);
+    setIsEditDialogOpen(true);
   };
+
+   const handleSaveChanges = (updatedData: EditPaperData) => {
+     if (!editingPaper) return;
+
+     setPapers(prevPapers =>
+       prevPapers.map(p =>
+         p.id === editingPaper.id
+           ? { ...p, ...updatedData } // Merge updated metadata
+           : p
+       )
+     );
+
+     toast({
+       title: tEdit('editSuccessTitle'),
+       description: tEdit('editSuccessDescription', { title: updatedData.title }),
+     });
+     setIsEditDialogOpen(false);
+     setEditingPaper(null);
+   };
+
+   const handleCancelEdit = () => {
+     setIsEditDialogOpen(false);
+     setEditingPaper(null);
+   };
+
 
   const handleDeletePaper = (paperId: string) => {
     // Find the paper title before deleting for the toast message
@@ -187,10 +209,9 @@ export function PaperList() {
                      <Skeleton className="h-4 w-full mb-1" />
                      <Skeleton className="h-4 w-5/6 mb-3" />
                       <div className="flex items-center justify-between mt-3">
-                        <Skeleton className="h-6 w-24" /> {/* Skeleton for download button */}
+                        <Skeleton className="h-8 w-24" /> {/* Skeleton for download button */}
                         <div className="flex space-x-2">
-                            <Skeleton className="h-8 w-16" /> {/* Skeleton for edit */}
-                            <Skeleton className="h-8 w-16" /> {/* Skeleton for delete */}
+                            {/* Skeletons only if admin check would pass */}
                         </div>
                       </div>
                    </CardContent>
@@ -203,125 +224,182 @@ export function PaperList() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <List className="mr-2 h-5 w-5 text-primary" />
-          {t('title')}
-        </CardTitle>
-        <CardDescription>{t('description')}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-           <div className="space-y-4">
-             {[...Array(3)].map((_, index) => (
-                <Card key={index}>
+    <>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <List className="mr-2 h-5 w-5 text-primary" />
+              {t('title')}
+            </CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+               <div className="space-y-4">
+                 {[...Array(3)].map((_, index) => (
+                    <Card key={index}>
+                        <CardHeader>
+                            <Skeleton className="h-5 w-3/4 mb-2" />
+                            <Skeleton className="h-4 w-1/2" />
+                             <Skeleton className="h-4 w-1/4 mt-1" /> {/* Skeleton for date */}
+                        </CardHeader>
+                        <CardContent>
+                            <Skeleton className="h-4 w-full mb-1" />
+                            <Skeleton className="h-4 w-5/6 mb-3" />
+                            <div className="flex items-center justify-between mt-3">
+                              <Skeleton className="h-8 w-24" /> {/* Skeleton for download button */}
+                             {isAdmin && ( // Show skeleton buttons for admin
+                                <div className="flex space-x-2">
+                                    <Skeleton className="h-8 w-16" />
+                                    <Skeleton className="h-8 w-16" />
+                                </div>
+                             )}
+                             </div>
+                        </CardContent>
+                    </Card>
+                 ))}
+              </div>
+            ) : papers.length > 0 ? (
+              <div className="space-y-4">
+                {papers.map((paper) => (
+                  <Card key={paper.id} className="transition-shadow duration-300 hover:shadow-md">
                     <CardHeader>
-                        <Skeleton className="h-5 w-3/4 mb-2" />
-                        <Skeleton className="h-4 w-1/2" />
-                         <Skeleton className="h-4 w-1/4 mt-1" /> {/* Skeleton for date */}
+                      <CardTitle className="text-base flex items-center">
+                        <FileText className="mr-2 h-5 w-5 text-primary" />
+                        {paper.title}
+                      </CardTitle>
+                      <CardDescription>
+                         {t('paperByAuthors', { authors: paper.authors })} | {t('uploadedOn', { date: formatDate(paper.uploadDate) })}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Skeleton className="h-4 w-full mb-1" />
-                        <Skeleton className="h-4 w-5/6 mb-3" />
-                        <div className="flex items-center justify-between mt-3">
-                          <Skeleton className="h-6 w-24" /> {/* Skeleton for download button */}
-                         {isAdmin && ( // Show skeleton buttons for admin
-                            <div className="flex space-x-2">
-                                <Skeleton className="h-8 w-16" />
-                                <Skeleton className="h-8 w-16" />
-                            </div>
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{paper.abstract}</p>
+                      <div className="flex items-center justify-between">
+                          {/* Download Button */}
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => handleViewOrDownloadPaper(paper)}
+                             disabled={!paper.fileDataUrl} // Disable if no data URL
+                             className="transition-colors duration-200 hover:bg-primary/10"
+                             aria-label={t('downloadActionLabel', { title: paper.title })}
+                            >
+                             <Download className="mr-1 h-4 w-4" />
+                             {t('downloadButton')}
+                           </Button>
+
+                         {/* Admin Actions */}
+                         {isAdmin && (
+                           <div className="flex space-x-2">
+                             {/* Edit Button */}
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => handleEditPaper(paper)} // Pass the whole paper object
+                               className="transition-colors duration-200 hover:bg-accent hover:text-accent-foreground"
+                               aria-label={t('editActionLabel', { title: paper.title })}
+                             >
+                               <Edit className="mr-1 h-4 w-4" />
+                               {t('editButton')}
+                             </Button>
+
+                             {/* Delete Button with Confirmation */}
+                             <AlertDialog open={paperToDelete?.id === paper.id} onOpenChange={(open) => !open && setPaperToDelete(null)}>
+                                <AlertDialogTrigger asChild>
+                                   <Button
+                                     variant="destructive"
+                                     size="sm"
+                                     className="transition-colors duration-200 hover:bg-destructive/90"
+                                     onClick={() => setPaperToDelete(paper)} // Set paper for confirmation
+                                     aria-label={t('deleteActionLabel', { title: paper.title })}
+                                   >
+                                     <Trash2 className="mr-1 h-4 w-4" />
+                                     {t('deleteButton')}
+                                   </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      {t('deleteConfirmDescription', { title: paperToDelete?.title || t('unknownPaperTitle') })}
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel onClick={() => setPaperToDelete(null)}>{t('cancelButton')}</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => paperToDelete && handleDeletePaper(paperToDelete.id)}>
+                                      {t('confirmDeleteButton')}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                             </AlertDialog>
+                           </div>
                          )}
-                         </div>
-                    </CardContent>
-                </Card>
-             ))}
-          </div>
-        ) : papers.length > 0 ? (
-          <div className="space-y-4">
-            {papers.map((paper) => (
-              <Card key={paper.id} className="transition-shadow duration-300 hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center">
-                    <FileText className="mr-2 h-5 w-5 text-primary" />
-                    {paper.title}
-                  </CardTitle>
-                  <CardDescription>
-                     {t('paperByAuthors', { authors: paper.authors })} | {t('uploadedOn', { date: formatDate(paper.uploadDate) })}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{paper.abstract}</p>
-                  <div className="flex items-center justify-between">
-                      {/* Download Button */}
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => handleViewOrDownloadPaper(paper)}
-                         disabled={!paper.fileDataUrl} // Disable if no data URL
-                         className="transition-colors duration-200 hover:bg-primary/10"
-                         aria-label={t('downloadActionLabel', { title: paper.title })}
-                        >
-                         <Download className="mr-1 h-4 w-4" />
-                         {t('downloadButton')}
-                       </Button>
-
-                     {/* Admin Actions */}
-                     {isAdmin && (
-                       <div className="flex space-x-2">
-                         {/* Edit Button */}
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => handleEditPaper(paper.id)}
-                           className="transition-colors duration-200 hover:bg-accent hover:text-accent-foreground"
-                           aria-label={t('editActionLabel', { title: paper.title })}
-                         >
-                           <Edit className="mr-1 h-4 w-4" />
-                           {t('editButton')}
-                         </Button>
-
-                         {/* Delete Button with Confirmation */}
-                         <AlertDialog open={paperToDelete?.id === paper.id} onOpenChange={(open) => !open && setPaperToDelete(null)}>
-                            <AlertDialogTrigger asChild>
-                               <Button
-                                 variant="destructive"
-                                 size="sm"
-                                 className="transition-colors duration-200 hover:bg-destructive/90"
-                                 onClick={() => setPaperToDelete(paper)} // Set paper for confirmation
-                                 aria-label={t('deleteActionLabel', { title: paper.title })}
-                               >
-                                 <Trash2 className="mr-1 h-4 w-4" />
-                                 {t('deleteButton')}
-                               </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {t('deleteConfirmDescription', { title: paperToDelete?.title || t('unknownPaperTitle') })}
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setPaperToDelete(null)}>{t('cancelButton')}</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => paperToDelete && handleDeletePaper(paperToDelete.id)}>
-                                  {t('confirmDeleteButton')}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                         </AlertDialog>
                        </div>
-                     )}
-                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground italic text-center py-4">{t('noPapers')}</p>
-        )}
-      </CardContent>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground italic text-center py-4">{t('noPapers')}</p>
+            )}
+          </CardContent>
 
-    </Card>
+        </Card>
+
+        {/* Edit Paper Dialog/Modal */}
+        <EditPaperForm
+           isOpen={isEditDialogOpen}
+           onClose={handleCancelEdit}
+           paperData={editingPaper ? { title: editingPaper.title, authors: editingPaper.authors, abstract: editingPaper.abstract } : undefined}
+           onSave={handleSaveChanges}
+        />
+    </>
   )
 }
+
+// Add EditPaperForm translations to JSON files if not already present
+// en.json:
+// "EditPaperForm": {
+//   "dialogTitle": "Edit Paper Details",
+//   "dialogDescription": "Modify the metadata for the selected paper. File content cannot be changed.",
+//   "paperTitleLabel": "Title",
+//   "paperTitlePlaceholder": "Enter the new paper title",
+//   "paperTitleError": "Title must be at least 2 characters.",
+//   "authorsLabel": "Authors",
+//   "authorsPlaceholder": "e.g., John Doe, Jane Smith",
+//   "authorsDescription": "Comma-separated list of authors.",
+//   "authorsError": "Authors must be at least 2 characters.",
+//   "abstractLabel": "Abstract",
+//   "abstractPlaceholder": "Enter the new paper abstract",
+//   "abstractError": "Abstract must be at least 10 characters.",
+//   "saveButton": "Save Changes",
+//   "savingButton": "Saving...",
+//   "cancelButton": "Cancel",
+//   "editSuccessTitle": "Paper Updated",
+//   "editSuccessDescription": "Metadata for \"{title}\" has been updated.",
+//   "editErrorTitle": "Update Failed",
+//   "editErrorDescription": "Could not update the paper metadata. Please try again."
+// }
+// ar.json:
+// "EditPaperForm": {
+//   "dialogTitle": "تعديل تفاصيل الورقة",
+//   "dialogDescription": "قم بتعديل البيانات الوصفية للورقة المحددة. لا يمكن تغيير محتوى الملف.",
+//   "paperTitleLabel": "العنوان",
+//   "paperTitlePlaceholder": "أدخل عنوان الورقة الجديد",
+//   "paperTitleError": "يجب أن يكون العنوان مكونًا من حرفين على الأقل.",
+//   "authorsLabel": "المؤلفون",
+//   "authorsPlaceholder": "مثال: جون دو، جين سميث",
+//   "authorsDescription": "قائمة المؤلفين مفصولة بفواصل.",
+//   "authorsError": "يجب أن يكون اسم المؤلفين مكونًا من حرفين على الأقل.",
+//   "abstractLabel": "الملخص",
+//   "abstractPlaceholder": "أدخل ملخص الورقة الجديد",
+//   "abstractError": "يجب أن يكون الملخص مكونًا من 10 أحرف على الأقل.",
+//   "saveButton": "حفظ التغييرات",
+//   "savingButton": "جار الحفظ...",
+//   "cancelButton": "إلغاء",
+//   "editSuccessTitle": "تم تحديث الورقة",
+//   "editSuccessDescription": "تم تحديث البيانات الوصفية لـ \"{title}\".",
+//   "editErrorTitle": "فشل التحديث",
+//   "editErrorDescription": "تعذر تحديث البيانات الوصفية للورقة. يرجى المحاولة مرة أخرى."
+// }
+
