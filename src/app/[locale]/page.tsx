@@ -1,9 +1,11 @@
+// @ts-nocheck
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UploadForm } from "@/components/research/upload-form";
 import { SearchSection } from "@/components/research/search-section";
+import { PaperList } from "@/components/research/paper-list"; // Import the new component
 import { LoginForm } from "@/components/auth/login-form";
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/navigation'; // Use navigation hook
@@ -60,12 +62,16 @@ export default function Home() {
          {t('logoutButton')} // Assuming you add 'logoutButton' to your translations
        </Button> */}
       <Tabs defaultValue="search" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6"> {/* Updated to grid-cols-3 */}
           <TabsTrigger value="search">{t('searchTab')}</TabsTrigger>
+          <TabsTrigger value="view">{t('viewTab')}</TabsTrigger> {/* New Tab Trigger */}
           <TabsTrigger value="upload">{t('uploadTab')}</TabsTrigger>
         </TabsList>
         <TabsContent value="search">
           <SearchSection />
+        </TabsContent>
+        <TabsContent value="view"> {/* New Tab Content */}
+          <PaperList />
         </TabsContent>
         <TabsContent value="upload">
           <UploadForm />

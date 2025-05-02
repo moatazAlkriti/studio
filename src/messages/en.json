@@ -28,7 +28,8 @@
   },
   "HomePage": {
     "searchTab": "Search Papers",
-    "uploadTab": "Upload Paper"
+    "uploadTab": "Upload Paper",
+    "viewTab": "View Papers"
   },
   "SearchSection": {
     "title": "Search Research Papers",
@@ -122,5 +123,10 @@
     "teamMember3": "Mohammed Hassan",
     "contactTitle": "Contact Us",
     "contactText": "Have questions or feedback? Reach out to us at"
+  },
+  "PaperList": {
+    "title": "All Research Papers",
+    "description": "Browse through the collection of available research papers.",
+    "noPapers": "No research papers available at the moment."
   }
 }
