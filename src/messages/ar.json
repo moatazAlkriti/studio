@@ -127,6 +127,18 @@
   "PaperList": {
     "title": "جميع الأوراق البحثية",
     "description": "تصفح مجموعة الأوراق البحثية المتاحة.",
-    "noPapers": "لا توجد أوراق بحثية متاحة في الوقت الحالي."
+    "noPapers": "لا توجد أوراق بحثية متاحة في الوقت الحالي.",
+    "editButton": "تعديل",
+    "deleteButton": "حذف",
+    "editPaperTitle": "تعديل الورقة (محاكاة)",
+    "editPaperDescription": "تم بدء التعديل للورقة رقم: {paperId}. قم بتطبيق منطق التعديل الفعلي.",
+    "deletePaperTitle": "تم حذف الورقة",
+    "deletePaperDescription": "تمت إزالة الورقة بنجاح.",
+    "deleteConfirmTitle": "هل أنت متأكد؟",
+    "deleteConfirmDescription": "لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف الورقة \"{title}\" بشكل دائم.",
+    "cancelButton": "إلغاء",
+    "confirmDeleteButton": "تأكيد الحذف",
+    "editActionLabel": "تعديل الورقة {title}",
+    "deleteActionLabel": "حذف الورقة {title}"
   }
 }

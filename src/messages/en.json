@@ -127,6 +127,18 @@
   "PaperList": {
     "title": "All Research Papers",
     "description": "Browse through the collection of available research papers.",
-    "noPapers": "No research papers available at the moment."
+    "noPapers": "No research papers available at the moment.",
+    "editButton": "Edit",
+    "deleteButton": "Delete",
+    "editPaperTitle": "Edit Paper (Simulation)",
+    "editPaperDescription": "Triggered edit for paper ID: {paperId}. Implement actual edit logic.",
+    "deletePaperTitle": "Paper Deleted",
+    "deletePaperDescription": "The paper has been removed.",
+    "deleteConfirmTitle": "Are you sure?",
+    "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the paper \"{title}\".",
+    "cancelButton": "Cancel",
+    "confirmDeleteButton": "Confirm Delete",
+    "editActionLabel": "Edit paper {title}",
+    "deleteActionLabel": "Delete paper {title}"
   }
 }
