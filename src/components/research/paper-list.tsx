@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, List, Trash2, Edit } from "lucide-react" // Added Edit and Trash2 icons
+import { FileText, List, Trash2, Edit, Download } from "lucide-react" // Added Edit, Trash2, Download icons
 import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
@@ -19,17 +19,28 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { format } from 'date-fns'; // For formatting date
 
-// Dummy data (can be replaced with actual data fetching)
-const initialDummyPapers = [
-  { id: '1', title: "Paper Title One", authors: "Author A, Author B", year: "2023", abstract: "This is the abstract for paper one..." },
-  { id: '2', title: "Another Research Paper", authors: "Author C", year: "2022", abstract: "Abstract for the second paper goes here..." },
-  { id: '3', title: "Study on AI Ethics", authors: "Author A", year: "2023", abstract: "Exploring ethical considerations in artificial intelligence..." },
-  { id: '4', title: "Quantum Computing Advances", authors: "Author D, Author E", year: "2024", abstract: "Recent breakthroughs in quantum algorithms and hardware." },
-  { id: '5', title: "Climate Change Impact Study", authors: "Author F", year: "2021", abstract: "Analysis of the effects of climate change on coastal regions." },
+// Type for paper data stored in localStorage (must match UploadForm)
+interface StoredPaper {
+    id: string;
+    title: string;
+    authors: string;
+    abstract: string;
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    fileDataUrl: string; // Store file content as Data URL
+    uploadDate: string; // Add upload timestamp
+}
+
+// Fallback dummy data (only used if localStorage is empty/invalid)
+const initialDummyPapers: StoredPaper[] = [
+  { id: 'dummy-1', title: "Example Paper One", authors: "Author A, Author B", uploadDate: "2023-01-15T10:00:00Z", abstract: "This is a sample abstract for an example paper stored locally...", fileName: "example1.pdf", fileType: "application/pdf", fileSize: 1024*500, fileDataUrl: "" },
+  { id: 'dummy-2', title: "Another Example Paper", authors: "Author C", uploadDate: "2022-11-20T14:30:00Z", abstract: "Abstract for the second example paper...", fileName: "example2.pdf", fileType: "application/pdf", fileSize: 1024*800, fileDataUrl: "" },
 ];
 
-type Paper = typeof initialDummyPapers[0];
+type Paper = StoredPaper;
 
 export function PaperList() {
   const t = useTranslations('PaperList');
@@ -49,43 +60,110 @@ export function PaperList() {
       setIsAdmin(true);
     }
 
-    // Simulate fetching data
+    // Fetch data from localStorage
     setIsLoading(true);
-    setTimeout(() => {
-      // In a real app, fetch from local storage or API if persistence is needed
-      const storedPapers = localStorage.getItem('researchHubPapers');
-      setPapers(storedPapers ? JSON.parse(storedPapers) : initialDummyPapers);
-      setIsLoading(false);
-    }, 1000); // Simulate network delay
-  }, []);
+    try {
+        const storedPapersJSON = localStorage.getItem('researchHubPapers');
+        if (storedPapersJSON) {
+            // Basic validation: check if it's an array
+            const parsedPapers = JSON.parse(storedPapersJSON);
+            if (Array.isArray(parsedPapers)) {
+                setPapers(parsedPapers);
+            } else {
+                console.warn("Invalid data format in localStorage 'researchHubPapers', using fallback.");
+                setPapers(initialDummyPapers);
+                localStorage.setItem('researchHubPapers', JSON.stringify(initialDummyPapers)); // Reset localStorage
+            }
+        } else {
+            // If nothing in storage, use initial dummy data and store it
+            setPapers(initialDummyPapers);
+            localStorage.setItem('researchHubPapers', JSON.stringify(initialDummyPapers));
+        }
+    } catch (error) {
+        console.error("Error reading or parsing localStorage:", error);
+        setPapers(initialDummyPapers); // Fallback to dummy data on error
+    } finally {
+        setIsLoading(false);
+    }
+  }, []); // Run only once on mount
 
-   // Update local storage when papers change
+   // Update local storage when papers change (e.g., after delete)
    useEffect(() => {
-     if (isClient && !isLoading) { // Only run on client after initial load
-       localStorage.setItem('researchHubPapers', JSON.stringify(papers));
+     if (isClient && !isLoading) { // Only run on client after initial load/modification
+       try {
+           localStorage.setItem('researchHubPapers', JSON.stringify(papers));
+       } catch (error) {
+           console.error("Error writing to localStorage:", error);
+           toast({
+               variant: "destructive",
+               title: t('localStorageErrorTitle'),
+               description: t('localStorageWriteErrorDescription')
+           })
+       }
      }
-   }, [papers, isClient, isLoading]);
+   }, [papers, isClient, isLoading, t]);
 
   const handleEditPaper = (paperId: string) => {
     // Simulate edit action (e.g., open a modal or navigate to an edit page)
-    console.log(`Edit paper with ID: ${paperId}`);
+    // In a real app, you might pass the paper data to the modal/page
+    const paperToEdit = papers.find(p => p.id === paperId);
+    console.log(`Edit paper:`, paperToEdit);
     toast({
       title: t('editPaperTitle'),
       description: t('editPaperDescription', { paperId }),
     });
-    // Here you would typically open a modal/form pre-filled with paper data
+    // TODO: Implement actual edit functionality (e.g., open Modal with form)
   };
 
   const handleDeletePaper = (paperId: string) => {
-    // Simulate delete action
+    // Find the paper title before deleting for the toast message
+    const paperTitle = papers.find(p => p.id === paperId)?.title || t('unknownPaperTitle');
+    // Update state (this triggers the useEffect to update localStorage)
     setPapers(prevPapers => prevPapers.filter(paper => paper.id !== paperId));
     toast({
       title: t('deletePaperTitle'),
-      description: t('deletePaperDescription'),
+      description: t('deletePaperSuccessDescription', { title: paperTitle }), // Use specific success message
       variant: 'destructive',
     });
     setPaperToDelete(null); // Close the dialog
   };
+
+   const handleViewOrDownloadPaper = (paper: Paper) => {
+     if (!paper.fileDataUrl) {
+       toast({
+         variant: "destructive",
+         title: t('viewErrorTitle'),
+         description: t('viewErrorNoData'),
+       });
+       return;
+     }
+
+     // Option 1: Open in new tab (browser PDF viewer)
+     // window.open(paper.fileDataUrl, '_blank');
+
+     // Option 2: Trigger download
+     const link = document.createElement('a');
+     link.href = paper.fileDataUrl;
+     link.download = paper.fileName || `paper-${paper.id}.pdf`; // Provide a filename
+     document.body.appendChild(link);
+     link.click();
+     document.body.removeChild(link);
+
+     toast({
+       title: t('downloadStartedTitle'),
+       description: t('downloadStartedDescription', { fileName: paper.fileName }),
+     });
+   };
+
+  // Format date utility
+  const formatDate = (dateString: string | undefined) => {
+      if (!dateString) return t('unknownDate');
+      try {
+          return format(new Date(dateString), 'PPP'); // e.g., Jun 22, 2024
+      } catch (e) {
+          return t('invalidDate');
+      }
+  }
 
   // Don't render potentially sensitive controls on server or before hydration
   if (!isClient) {
@@ -103,11 +181,18 @@ export function PaperList() {
                    <CardHeader>
                      <Skeleton className="h-5 w-3/4 mb-2" />
                      <Skeleton className="h-4 w-1/2" />
+                     <Skeleton className="h-4 w-1/4 mt-1" /> {/* Skeleton for date */}
                    </CardHeader>
                    <CardContent>
                      <Skeleton className="h-4 w-full mb-1" />
                      <Skeleton className="h-4 w-5/6 mb-3" />
-                     <Skeleton className="h-6 w-24" />
+                      <div className="flex items-center justify-between mt-3">
+                        <Skeleton className="h-6 w-24" /> {/* Skeleton for download button */}
+                        <div className="flex space-x-2">
+                            <Skeleton className="h-8 w-16" /> {/* Skeleton for edit */}
+                            <Skeleton className="h-8 w-16" /> {/* Skeleton for delete */}
+                        </div>
+                      </div>
                    </CardContent>
                  </Card>
                ))}
@@ -134,17 +219,20 @@ export function PaperList() {
                     <CardHeader>
                         <Skeleton className="h-5 w-3/4 mb-2" />
                         <Skeleton className="h-4 w-1/2" />
+                         <Skeleton className="h-4 w-1/4 mt-1" /> {/* Skeleton for date */}
                     </CardHeader>
                     <CardContent>
                         <Skeleton className="h-4 w-full mb-1" />
                         <Skeleton className="h-4 w-5/6 mb-3" />
-                        <Skeleton className="h-6 w-24" />
+                        <div className="flex items-center justify-between mt-3">
+                          <Skeleton className="h-6 w-24" /> {/* Skeleton for download button */}
                          {isAdmin && ( // Show skeleton buttons for admin
-                            <div className="flex space-x-2 mt-2">
+                            <div className="flex space-x-2">
                                 <Skeleton className="h-8 w-16" />
                                 <Skeleton className="h-8 w-16" />
                             </div>
                          )}
+                         </div>
                     </CardContent>
                 </Card>
              ))}
@@ -159,20 +247,29 @@ export function PaperList() {
                     {paper.title}
                   </CardTitle>
                   <CardDescription>
-                    {tSearch('paperBy', { authors: paper.authors, year: paper.year })}
+                     {t('paperByAuthors', { authors: paper.authors })} | {t('uploadedOn', { date: formatDate(paper.uploadDate) })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-3">{paper.abstract}</p>
-                  <div className="flex items-center justify-between mt-3">
-                      {/* Always show view button */}
-                      <Button variant="link" size="sm" className="p-0 h-auto">
-                         {tSearch('viewPaperButton')}
-                      </Button>
+                  <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{paper.abstract}</p>
+                  <div className="flex items-center justify-between">
+                      {/* Download Button */}
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => handleViewOrDownloadPaper(paper)}
+                         disabled={!paper.fileDataUrl} // Disable if no data URL
+                         className="transition-colors duration-200 hover:bg-primary/10"
+                         aria-label={t('downloadActionLabel', { title: paper.title })}
+                        >
+                         <Download className="mr-1 h-4 w-4" />
+                         {t('downloadButton')}
+                       </Button>
 
                      {/* Admin Actions */}
                      {isAdmin && (
                        <div className="flex space-x-2">
+                         {/* Edit Button */}
                          <Button
                            variant="outline"
                            size="sm"
@@ -184,7 +281,8 @@ export function PaperList() {
                            {t('editButton')}
                          </Button>
 
-                         <AlertDialog>
+                         {/* Delete Button with Confirmation */}
+                         <AlertDialog open={paperToDelete?.id === paper.id} onOpenChange={(open) => !open && setPaperToDelete(null)}>
                             <AlertDialogTrigger asChild>
                                <Button
                                  variant="destructive"
@@ -197,22 +295,20 @@ export function PaperList() {
                                  {t('deleteButton')}
                                </Button>
                             </AlertDialogTrigger>
-                            {paperToDelete && paperToDelete.id === paper.id && ( // Only render content for the selected paper
-                               <AlertDialogContent>
-                                 <AlertDialogHeader>
-                                   <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
-                                   <AlertDialogDescription>
-                                     {t('deleteConfirmDescription', { title: paperToDelete.title })}
-                                   </AlertDialogDescription>
-                                 </AlertDialogHeader>
-                                 <AlertDialogFooter>
-                                   <AlertDialogCancel onClick={() => setPaperToDelete(null)}>{t('cancelButton')}</AlertDialogCancel>
-                                   <AlertDialogAction onClick={() => handleDeletePaper(paperToDelete.id)}>
-                                     {t('confirmDeleteButton')}
-                                   </AlertDialogAction>
-                                 </AlertDialogFooter>
-                               </AlertDialogContent>
-                            )}
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t('deleteConfirmDescription', { title: paperToDelete?.title || t('unknownPaperTitle') })}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => setPaperToDelete(null)}>{t('cancelButton')}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => paperToDelete && handleDeletePaper(paperToDelete.id)}>
+                                  {t('confirmDeleteButton')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
                          </AlertDialog>
                        </div>
                      )}

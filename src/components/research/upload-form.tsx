@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Upload } from "lucide-react"
+import { Upload, Loader2 } from "lucide-react" // Added Loader2
 import { useState, type ChangeEvent } from "react"
 import { useTranslations } from "next-intl";
 
@@ -35,18 +35,35 @@ const getFormSchema = (t: ReturnType<typeof useTranslations<'UploadForm'>>) => z
   abstract: z.string().min(10, {
     message: t('abstractError'),
   }),
+  // Use refine for file validation as `any` doesn't allow direct chaining
   file: z.any()
-    .refine((file) => file?.size <= MAX_FILE_SIZE, t('fileSizeError'))
+    .refine((files) => files?.[0], t('fileRequiredError')) // Check if file exists
+    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, t('fileSizeError'))
     .refine(
-      (file) => ACCEPTED_FILE_TYPES.includes(file?.type),
+      (files) => ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
       t('fileTypeError')
     ),
 });
+
+// Type for paper data stored in localStorage
+interface StoredPaper {
+    id: string;
+    title: string;
+    authors: string;
+    abstract: string;
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    fileDataUrl: string; // Store file content as Data URL
+    uploadDate: string; // Add upload timestamp
+}
+
 
 export function UploadForm() {
   const t = useTranslations('UploadForm');
   const { toast } = useToast()
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false); // Loading state
 
   // Create schema with translations
   const formSchema = getFormSchema(t);
@@ -61,26 +78,82 @@ export function UploadForm() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Simulate form submission
-    console.log("Form submitted:", values)
-    // In a real app, you would handle file upload and data saving here
-    toast({
-      title: t('uploadSuccessTitle'),
-      description: t('uploadSuccessDescription', { title: values.title }),
-    })
-    form.reset()
-    setFileName(null)
+  // Function to read file as Data URL
+  const readFileAsDataURL = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+      });
   }
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>, fieldChange: (file: File | null) => void) => {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsUploading(true);
+    const file = values.file?.[0]; // Get the File object
+
+    if (!file) {
+        // This should ideally be caught by validation, but good to double-check
+        toast({
+            variant: "destructive",
+            title: t('uploadErrorTitle'),
+            description: t('fileRequiredError'),
+        });
+        setIsUploading(false);
+        return;
+    }
+
+    try {
+        const fileDataUrl = await readFileAsDataURL(file);
+
+        const newPaper: StoredPaper = {
+            id: `paper-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`, // More unique ID
+            title: values.title,
+            authors: values.authors,
+            abstract: values.abstract,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            fileDataUrl: fileDataUrl, // Store the file content
+            uploadDate: new Date().toISOString(),
+        };
+
+        // Save to localStorage
+        const existingPapersJSON = localStorage.getItem('researchHubPapers');
+        const existingPapers: StoredPaper[] = existingPapersJSON ? JSON.parse(existingPapersJSON) : [];
+        existingPapers.push(newPaper);
+        localStorage.setItem('researchHubPapers', JSON.stringify(existingPapers));
+
+
+        toast({
+            title: t('uploadSuccessTitle'),
+            description: t('uploadSuccessDescription', { title: values.title }),
+        });
+        form.reset();
+        setFileName(null);
+
+    } catch (error) {
+        console.error("Error uploading file:", error);
+        toast({
+            variant: "destructive",
+            title: t('uploadErrorTitle'),
+            description: t('uploadErrorDescription'), // Generic error message
+        });
+    } finally {
+        setIsUploading(false);
+    }
+  }
+
+  // Use field.onChange provided by react-hook-form
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      fieldChange(file);
       setFileName(file.name);
+      // Pass the FileList to the form field
+      form.setValue('file', e.target.files, { shouldValidate: true });
     } else {
-      fieldChange(null);
       setFileName(null);
+      form.setValue('file', null, { shouldValidate: true });
     }
   };
 
@@ -100,7 +173,7 @@ export function UploadForm() {
                 <FormItem>
                   <FormLabel>{t('paperTitleLabel')}</FormLabel>
                   <FormControl>
-                    <Input placeholder={t('paperTitlePlaceholder')} {...field} />
+                    <Input placeholder={t('paperTitlePlaceholder')} {...field} disabled={isUploading}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -113,7 +186,7 @@ export function UploadForm() {
                 <FormItem>
                   <FormLabel>{t('authorsLabel')}</FormLabel>
                   <FormControl>
-                    <Input placeholder={t('authorsPlaceholder')} {...field} />
+                    <Input placeholder={t('authorsPlaceholder')} {...field} disabled={isUploading}/>
                   </FormControl>
                   <FormDescription>
                     {t('authorsDescription')}
@@ -134,6 +207,7 @@ export function UploadForm() {
                       className="resize-none"
                       {...field}
                       rows={5}
+                      disabled={isUploading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -143,33 +217,48 @@ export function UploadForm() {
              <FormField
               control={form.control}
               name="file"
-              render={({ field }) => (
-                <FormItem>
+              // No render prop needed here as we handle it manually
+              render={({ field }) => ( // Use render prop to get field state
+                 <FormItem>
                   <FormLabel>{t('fileLabel')}</FormLabel>
                   <FormControl>
-                    <Input
-                      type="file"
-                      accept={ACCEPTED_FILE_TYPES.join(",")}
-                      onChange={(e) => handleFileChange(e, field.onChange)}
-                      className="hidden" // Hide the default input
-                      id="file-upload"
-                      ref={field.ref}
-                      name={field.name}
-                      onBlur={field.onBlur}
-                    />
+                     {/* We keep the hidden input for react-hook-form to register */}
+                     <Input
+                       type="file"
+                       accept={ACCEPTED_FILE_TYPES.join(",")}
+                       onChange={handleFileChange} // Use our custom handler
+                       className="hidden"
+                       id="file-upload"
+                       ref={field.ref} // Important: Assign ref
+                       name={field.name} // Important: Assign name
+                       onBlur={field.onBlur} // Important: Assign onBlur
+                       disabled={isUploading}
+                     />
                   </FormControl>
-                   <Button type="button" variant="outline" className="w-full" onClick={() => document.getElementById('file-upload')?.click()}>
+                   <Button
+                     type="button"
+                     variant="outline"
+                     className="w-full"
+                     onClick={() => document.getElementById('file-upload')?.click()}
+                     disabled={isUploading}
+                    >
                      <Upload className="mr-2 h-4 w-4" /> {fileName ? t('selectedFileButton', { fileName }) : t('chooseFileButton')}
                    </Button>
                   <FormDescription>
                     {t('fileDescription')}
                   </FormDescription>
+                  {/* Display error message */}
                   <FormMessage />
-                </FormItem>
-              )}
+                 </FormItem>
+               )}
             />
-            <Button type="submit" className="w-full">
-              <Upload className="mr-2 h-4 w-4" /> {t('uploadButton')}
+            <Button type="submit" className="w-full" disabled={isUploading}>
+              {isUploading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              {isUploading ? t('uploadingButton') : t('uploadButton')}
             </Button>
           </form>
         </Form>

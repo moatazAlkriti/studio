@@ -68,9 +68,13 @@
     "fileDescription": "الحد الأقصى لحجم الملف: 5 ميجابايت.",
     "fileSizeError": "الحد الأقصى لحجم الملف هو 5 ميجابايت.",
     "fileTypeError": "يتم قبول ملفات .pdf فقط.",
+    "fileRequiredError": "ملف PDF مطلوب.",
     "uploadButton": "رفع الورقة",
+    "uploadingButton": "جار الرفع...",
     "uploadSuccessTitle": "تم رفع الورقة",
-    "uploadSuccessDescription": "تم إرسال \"{title}\"."
+    "uploadSuccessDescription": "تم إرسال \"{title}\".",
+    "uploadErrorTitle": "فشل الرفع",
+    "uploadErrorDescription": "تعذر رفع الورقة. يرجى المحاولة مرة أخرى."
   },
   "AdminPage": {
     "dashboardTitle": "لوحة تحكم المسؤول",
@@ -130,15 +134,28 @@
     "noPapers": "لا توجد أوراق بحثية متاحة في الوقت الحالي.",
     "editButton": "تعديل",
     "deleteButton": "حذف",
+    "downloadButton": "تحميل",
     "editPaperTitle": "تعديل الورقة (محاكاة)",
     "editPaperDescription": "تم بدء التعديل للورقة رقم: {paperId}. قم بتطبيق منطق التعديل الفعلي.",
     "deletePaperTitle": "تم حذف الورقة",
-    "deletePaperDescription": "تمت إزالة الورقة بنجاح.",
+    "deletePaperSuccessDescription": "تمت إزالة الورقة \"{title}\" بنجاح.",
     "deleteConfirmTitle": "هل أنت متأكد؟",
     "deleteConfirmDescription": "لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف الورقة \"{title}\" بشكل دائم.",
     "cancelButton": "إلغاء",
     "confirmDeleteButton": "تأكيد الحذف",
     "editActionLabel": "تعديل الورقة {title}",
-    "deleteActionLabel": "حذف الورقة {title}"
+    "deleteActionLabel": "حذف الورقة {title}",
+    "downloadActionLabel": "تحميل الورقة {title}",
+    "viewErrorTitle": "خطأ في عرض الورقة",
+    "viewErrorNoData": "لا توجد بيانات ملف متاحة لهذه الورقة.",
+    "downloadStartedTitle": "بدأ التحميل",
+    "downloadStartedDescription": "بدأ تحميل الملف \"{fileName}\".",
+    "paperByAuthors": "بواسطة {authors}",
+    "uploadedOn": "تم الرفع في {date}",
+    "unknownDate": "تاريخ غير معروف",
+    "invalidDate": "تاريخ غير صالح",
+    "unknownPaperTitle": "هذه الورقة",
+    "localStorageErrorTitle": "خطأ في التخزين",
+    "localStorageWriteErrorDescription": "تعذر حفظ التغييرات في التخزين المحلي."
   }
 }

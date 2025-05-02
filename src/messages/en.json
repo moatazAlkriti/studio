@@ -68,9 +68,13 @@
     "fileDescription": "Max file size: 5MB.",
     "fileSizeError": "Max file size is 5MB.",
     "fileTypeError": "Only .pdf files are accepted.",
+    "fileRequiredError": "A PDF file is required.",
     "uploadButton": "Upload Paper",
+    "uploadingButton": "Uploading...",
     "uploadSuccessTitle": "Paper Uploaded",
-    "uploadSuccessDescription": "\"{title}\" has been submitted."
+    "uploadSuccessDescription": "\"{title}\" has been submitted.",
+    "uploadErrorTitle": "Upload Failed",
+    "uploadErrorDescription": "Could not upload the paper. Please try again."
   },
   "AdminPage": {
     "dashboardTitle": "Admin Dashboard",
@@ -130,15 +134,28 @@
     "noPapers": "No research papers available at the moment.",
     "editButton": "Edit",
     "deleteButton": "Delete",
+    "downloadButton": "Download",
     "editPaperTitle": "Edit Paper (Simulation)",
     "editPaperDescription": "Triggered edit for paper ID: {paperId}. Implement actual edit logic.",
     "deletePaperTitle": "Paper Deleted",
-    "deletePaperDescription": "The paper has been removed.",
+    "deletePaperSuccessDescription": "The paper \"{title}\" has been removed.",
     "deleteConfirmTitle": "Are you sure?",
     "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the paper \"{title}\".",
     "cancelButton": "Cancel",
     "confirmDeleteButton": "Confirm Delete",
     "editActionLabel": "Edit paper {title}",
-    "deleteActionLabel": "Delete paper {title}"
+    "deleteActionLabel": "Delete paper {title}",
+    "downloadActionLabel": "Download paper {title}",
+    "viewErrorTitle": "Error Viewing Paper",
+    "viewErrorNoData": "No file data available for this paper.",
+    "downloadStartedTitle": "Download Started",
+    "downloadStartedDescription": "Your download for \"{fileName}\" has started.",
+    "paperByAuthors": "By {authors}",
+    "uploadedOn": "Uploaded on {date}",
+    "unknownDate": "Unknown date",
+    "invalidDate": "Invalid date",
+    "unknownPaperTitle": "this paper",
+    "localStorageErrorTitle": "Storage Error",
+    "localStorageWriteErrorDescription": "Could not save changes to local storage."
   }
 }
