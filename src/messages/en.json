@@ -116,6 +116,10 @@
     "featureUpload": "Seamlessly upload research papers with relevant metadata (title, authors, abstract).",
     "featureSearch": "Utilize advanced search capabilities to find papers by keywords, authors, or publication year.",
     "featureAdmin": "Admin tools for categorizing papers by discipline and managing user access levels (public/private).",
+    "teamTitle": "Our Team",
+    "teamMember1": "Sajjad Jaafar",
+    "teamMember2": "Amir Saeed",
+    "teamMember3": "Mohammed Hassan",
     "contactTitle": "Contact Us",
     "contactText": "Have questions or feedback? Reach out to us at"
   }

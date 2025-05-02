@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
-import { Info, Target, UploadCloud, Search, Users } from "lucide-react";
+import { Info, Target, UploadCloud, Search, Users, ShieldCheck, Group } from "lucide-react"; // Added Group icon
 
 export default function AboutPage() {
   const t = useTranslations('AboutPage');
@@ -46,6 +46,19 @@ export default function AboutPage() {
                  <ShieldCheck className="h-4 w-4 mr-2 mt-1 text-accent flex-shrink-0" /> {/* Re-using ShieldCheck from admin */}
                  <span>{t('featureAdmin')}</span>
               </li>
+            </ul>
+          </section>
+
+          {/* New Team Section */}
+          <section>
+            <h2 className="text-xl font-semibold mb-3 flex items-center">
+              <Group className="mr-2 h-5 w-5 text-secondary-foreground" /> {/* Using Group icon */}
+              {t('teamTitle')}
+            </h2>
+            <ul className="space-y-1 text-muted-foreground">
+              <li>{t('teamMember1')}</li>
+              <li>{t('teamMember2')}</li>
+              <li>{t('teamMember3')}</li>
             </ul>
           </section>
 
