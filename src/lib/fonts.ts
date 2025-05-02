@@ -1,5 +1,7 @@
 import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
+// Removed GeistMono import as it's not found and not explicitly used
+// import { GeistMono } from 'geist/font/mono';
 
 export const fontSans = GeistSans;
-export const fontMono = GeistMono;
+// Removed fontMono export
+// export const fontMono = GeistMono;
