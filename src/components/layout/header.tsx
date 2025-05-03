@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLocale, useTranslations } from 'next-intl';
 import { locales } from '@/navigation'; // Import locales
+import { ThemeToggleButton } from '@/components/theme-toggle-button'; // Import ThemeToggleButton
 
 export function Header() {
   const t = useTranslations('Header');
@@ -114,6 +115,9 @@ export function Header() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Theme Toggle Button */}
+          <ThemeToggleButton />
 
            {/* Logout Button */}
            {isLoggedIn && ( // Show only if logged in

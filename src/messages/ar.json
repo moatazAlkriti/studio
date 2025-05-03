@@ -17,7 +17,7 @@
     "passwordRequiredError": "كلمة المرور مطلوبة."
   },
   "Header": {
-    "brandName": "نظام إدارة وأرشفة بحوث الماجستير والدكتوراه",
+    "brandName": "Master's and doctoral research management and archiving system",
     "adminLink": "الإدارة",
     "toggleSidebar": "تبديل الشريط الجانبي",
     "language": "اللغة",
@@ -180,5 +180,11 @@
     "editSuccessDescription": "تم تحديث البيانات الوصفية لـ \"{title}\".",
     "editErrorTitle": "فشل التحديث",
     "editErrorDescription": "تعذر تحديث البيانات الوصفية للورقة. يرجى المحاولة مرة أخرى."
+  },
+  "ThemeToggle": {
+    "toggleTheme": "تبديل السمة",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
   }
 }

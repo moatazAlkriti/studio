@@ -180,5 +180,11 @@
     "editSuccessDescription": "Metadata for \"{title}\" has been updated.",
     "editErrorTitle": "Update Failed",
     "editErrorDescription": "Could not update the paper metadata. Please try again."
+  },
+  "ThemeToggle": {
+    "toggleTheme": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Header } from '@/components/layout/header';
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
+import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider
 
 export const metadata: Metadata = {
   title: 'Research Hub',
@@ -33,15 +34,22 @@ export default async function RootLayout({
           GeistSans.variable,
         )}
       >
-        <NextIntlClientProvider messages={messages}>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1 container mx-auto py-8 px-4 md:px-6">
-              {children}
-            </main>
-          </div>
-          <Toaster />
-        </NextIntlClientProvider>
+        <ThemeProvider // Wrap with ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <NextIntlClientProvider messages={messages}>
+            <div className="relative flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1 container mx-auto py-8 px-4 md:px-6">
+                {children}
+              </main>
+            </div>
+            <Toaster />
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
