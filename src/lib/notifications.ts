@@ -9,7 +9,6 @@ const MAX_NOTIFICATIONS = 50; // Limit the number of stored notifications
  * Adds a notification to localStorage.
  * @param message - The notification message content.
  * @param recipient - Who should see the notification ('admin', 'all', or a specific user ID).
- * @param title - Optional title for the notification (used in toast, etc.).
  */
 export async function addNotification(message: string, recipient: Notification['recipient']): Promise<void> { // Made function async
   if (typeof window === 'undefined') {
@@ -48,8 +47,8 @@ export async function addNotification(message: string, recipient: Notification['
 
     localStorage.setItem('researchHubNotifications', JSON.stringify(updatedNotifications));
 
-    // Optional: Trigger a custom event to notify the header to update its state immediately
-    // window.dispatchEvent(new CustomEvent('new-notification'));
+    // Dispatch a custom event to notify the header (or other components) to update its state immediately
+    window.dispatchEvent(new CustomEvent('new-notification'));
 
   } catch (error) {
     console.error("Error adding notification to localStorage:", error);

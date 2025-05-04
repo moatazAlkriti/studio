@@ -46,7 +46,20 @@ export function Header() {
   const loadNotifications = () => {
     if (typeof window !== 'undefined') {
       const storedNotificationsJSON = localStorage.getItem('researchHubNotifications');
-      const allNotifications: Notification[] = storedNotificationsJSON ? JSON.parse(storedNotificationsJSON) : [];
+      let allNotifications: Notification[] = [];
+       if (storedNotificationsJSON) {
+            try {
+                const parsed = JSON.parse(storedNotificationsJSON);
+                if (Array.isArray(parsed)) {
+                    allNotifications = parsed;
+                } else {
+                    console.warn('Invalid notification data in localStorage during load, resetting.');
+                }
+            } catch (parseError) {
+                console.error('Error parsing notifications from localStorage during load, resetting.', parseError);
+            }
+        }
+
       const username = localStorage.getItem('researchHubUsername');
       const isAdminUser = username === 'admin';
 
@@ -80,13 +93,23 @@ export function Header() {
 
     loadNotifications(); // Load notifications on initial mount
 
-    // Optional: Set up an interval to check for new notifications periodically
-    // const intervalId = setInterval(loadNotifications, 30000); // Check every 30 seconds
-    // return () => clearInterval(intervalId); // Cleanup interval on unmount
+    // --- Add Event Listener for Real-time Updates ---
+    const handleNewNotification = () => {
+      // console.log('New notification event received, reloading notifications.');
+      loadNotifications();
+    };
+
+    window.addEventListener('new-notification', handleNewNotification);
+
+    // Cleanup: remove event listener on component unmount
+    return () => {
+      window.removeEventListener('new-notification', handleNewNotification);
+    };
+    // --- End Event Listener ---
 
   }, []); // Run only on mount
 
-  // Refresh notifications when the dropdown is opened
+  // Refresh notifications when the dropdown is opened (keep this as a fallback)
   const handleDropdownOpenChange = (open: boolean) => {
       if (open) {
           loadNotifications();
@@ -114,7 +137,9 @@ export function Header() {
   const handleMarkAsRead = (notificationId: string) => {
     // Update the state locally first for immediate feedback
     setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
-    setHasUnread(notifications.some(n => n.id !== notificationId && !n.read)); // Recalculate unread status
+    // Recalculate unread status based on the potentially modified notifications array
+    setHasUnread(notifications.some(n => n.id !== notificationId && !n.read));
+
 
     // Update the full list in localStorage
      if (typeof window !== 'undefined') {
@@ -125,6 +150,8 @@ export function Header() {
                n.id === notificationId ? { ...n, read: true } : n
            );
            localStorage.setItem('researchHubNotifications', JSON.stringify(updatedAllNotifications));
+           // After updating localStorage, re-check unread status from the source of truth
+           setHasUnread(updatedAllNotifications.filter(n => n.recipient === 'all' || (isAdmin && n.recipient === 'admin')).some(n => !n.read));
        } catch (error) {
            console.error("Error updating notification read status in localStorage:", error);
            toast({
@@ -132,6 +159,8 @@ export function Header() {
                title: tNotify('errorTitle'),
                description: tNotify('errorMarkRead'),
            })
+           // Revert state change on error? Or maybe just reload?
+           loadNotifications();
        }
      }
   };
@@ -217,7 +246,9 @@ export function Header() {
                   <DropdownMenuLabel>{tNotify('notifications')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {notifications.length > 0 ? (
-                    notifications.map((notification) => (
+                    notifications
+                        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()) // Sort by most recent first
+                        .map((notification) => (
                       <DropdownMenuItem
                         key={notification.id}
                         onSelect={(e) => {
@@ -228,15 +259,16 @@ export function Header() {
                             // Optionally navigate somewhere on click?
                             // e.g., if notification relates to a specific paper
                          }}
-                         className={`flex items-start justify-between gap-2 cursor-pointer ${!notification.read ? 'font-semibold' : 'text-muted-foreground'}`}
+                         className={`flex items-start justify-between gap-2 cursor-pointer ${!notification.read ? 'font-semibold bg-secondary/50 dark:bg-secondary/20' : 'text-muted-foreground'}`} // Highlight unread, adjust style
+                         style={{ whiteSpace: 'normal', minHeight: '2.5rem' }} // Allow text wrapping
                       >
-                          {!notification.read && <span className="absolute left-1 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
-                           <span className={`flex-1 text-sm leading-tight ${!notification.read ? 'ml-3' : 'ml-0'}`}>{notification.message}</span>
-                           <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(notification.timestamp)}</span>
+                          {!notification.read && <span className="absolute left-1.5 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />}
+                           <span className={`flex-1 text-sm leading-tight ${!notification.read ? 'pl-3' : 'pl-0'}`}>{notification.message}</span>
+                           <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">{timeAgo(notification.timestamp)}</span>
                       </DropdownMenuItem>
                     ))
                   ) : (
-                    <DropdownMenuItem disabled className="text-center text-muted-foreground">
+                    <DropdownMenuItem disabled className="text-center text-muted-foreground italic py-4">
                       {tNotify('noNotifications')}
                     </DropdownMenuItem>
                   )}
