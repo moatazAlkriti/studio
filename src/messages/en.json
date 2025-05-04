@@ -1,3 +1,4 @@
+
 {
   "LoginPage": {
     "title": "Login",
@@ -206,5 +207,9 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
-  }
+  },
+   "Notifications": {
+      "notifications": "Notifications",
+      "noNotifications": "No new notifications."
+   }
 }

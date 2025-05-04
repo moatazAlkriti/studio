@@ -1,3 +1,4 @@
+
 {
   "LoginPage": {
     "title": "تسجيل الدخول",
@@ -206,5 +207,9 @@
     "light": "فاتح",
     "dark": "داكن",
     "system": "النظام"
+  },
+  "Notifications": {
+     "notifications": "الإشعارات",
+     "noNotifications": "لا توجد إشعارات جديدة."
   }
 }
