@@ -52,9 +52,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
     // Simulate authentication check
     setTimeout(() => {
-      // Simple check for admin user or any other valid user (replace with actual auth logic)
-      // For demo, assume any non-empty username/password is valid if not admin
-      const isValidUser = (values.username === 'admin' && values.password === 'admin') || (values.username.length > 0 && values.password.length > 0);
+      // Simple check for default user or any other valid user (replace with actual auth logic)
+      // Check for 'user'/'user' or 'admin'/'admin' or any other non-empty credentials for demo
+      const isValidUser = (values.username === 'user' && values.password === 'user') ||
+                          (values.username === 'admin' && values.password === 'admin') ||
+                          (values.username.length > 0 && values.password.length > 0 && values.username !== 'user' && values.username !== 'admin');
 
       if (isValidUser) {
         toast({

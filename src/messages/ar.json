@@ -2,11 +2,11 @@
 {
   "LoginPage": {
     "title": "تسجيل الدخول",
-    "description": "أدخل اسم المستخدم 'admin' وكلمة المرور 'admin' للوصول إلى مركز الأبحاث.",
+    "description": "أدخل اسم المستخدم 'user' وكلمة المرور 'user' (أو 'admin'/'admin') للوصول إلى مركز الأبحاث.",
     "usernameLabel": "اسم المستخدم",
-    "usernamePlaceholder": "admin",
+    "usernamePlaceholder": "user",
     "passwordLabel": "كلمة المرور",
-    "passwordPlaceholder": "admin",
+    "passwordPlaceholder": "user",
     "loginButton": "تسجيل الدخول",
     "loggingInButton": "جار تسجيل الدخول...",
     "loginSuccessTitle": "تم تسجيل الدخول بنجاح",

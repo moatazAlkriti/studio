@@ -2,11 +2,11 @@
 {
   "LoginPage": {
     "title": "Login",
-    "description": "Enter username 'admin' and password 'admin' to access the Research Hub.",
+    "description": "Enter username 'user' and password 'user' (or 'admin'/'admin') to access the Research Hub.",
     "usernameLabel": "Username",
-    "usernamePlaceholder": "admin",
+    "usernamePlaceholder": "user",
     "passwordLabel": "Password",
-    "passwordPlaceholder": "admin",
+    "passwordPlaceholder": "user",
     "loginButton": "Login",
     "loggingInButton": "Logging in...",
     "loginSuccessTitle": "Login Successful",
