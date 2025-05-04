@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -18,9 +19,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Upload, Loader2 } from "lucide-react"
-import { useState, type ChangeEvent, useEffect } from "react" // Added useEffect
+import { useState, type ChangeEvent, useEffect } from "react"
 import { useTranslations } from "next-intl";
 import type { Notification } from '@/components/layout/header'; // Import Notification type
+import { addNotification } from "@/lib/notifications"; // Import notification utility
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
@@ -66,15 +68,12 @@ export function UploadForm() {
   const { toast } = useToast()
   const [fileName, setFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false); // Loading state
-  const [isAdminUser, setIsAdminUser] = useState(false); // State to check if user is admin
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null); // State for current user
 
-  // Check if the user is admin on mount
+  // Get current username on mount
   useEffect(() => {
       if (typeof window !== 'undefined') {
-          const username = localStorage.getItem('researchHubUsername');
-          if (username === 'admin') {
-              setIsAdminUser(true);
-          }
+          setCurrentUsername(localStorage.getItem('researchHubUsername'));
       }
   }, []);
 
@@ -106,7 +105,6 @@ export function UploadForm() {
     const file = values.file?.[0]; // Get the File object
 
     if (!file) {
-        // This should ideally be caught by validation, but good to double-check
         toast({
             variant: "destructive",
             title: t('uploadErrorTitle'),
@@ -138,23 +136,15 @@ export function UploadForm() {
         localStorage.setItem('researchHubPapers', JSON.stringify(existingPapers));
 
         // --- Add Notification for Admin ---
-        if (!isAdminUser) { // Only notify if the uploader is NOT admin
-            const newNotification: Notification = {
-                id: `notif-upload-${Date.now()}`,
-                message: tNotify('newPaperUploadMessage', { title: newPaper.title }),
-                timestamp: new Date().toISOString(),
-                read: false,
-                recipient: 'admin' // Target admin
-            };
+        // Send notification regardless of who uploaded, including username
+        addNotification(
+          tNotify('newPaperUploadMessage', {
+            title: newPaper.title,
+            username: currentUsername || tNotify('unknownUser') // Include username or fallback
+          }),
+          'admin' // Target admin
+        );
 
-            const existingNotificationsJSON = localStorage.getItem('researchHubNotifications');
-            const existingNotifications: Notification[] = existingNotificationsJSON ? JSON.parse(existingNotificationsJSON) : [];
-            existingNotifications.unshift(newNotification); // Add to the beginning
-             // Optional: Limit the number of stored notifications if needed
-             const MAX_NOTIFICATIONS = 50;
-             const limitedNotifications = existingNotifications.slice(0, MAX_NOTIFICATIONS);
-            localStorage.setItem('researchHubNotifications', JSON.stringify(limitedNotifications));
-        }
 
         // --- Show Success Toast & Reset Form ---
         toast({
@@ -301,6 +291,8 @@ export function UploadForm() {
 
 // Add needed translations to JSON files:
 // en.json -> Notifications:
-//   "newPaperUploadMessage": "New paper \"{title}\" uploaded."
+//   "newPaperUploadMessage": "New paper \"{title}\" uploaded by {username}.",
+//   "unknownUser": "an unknown user"
 // ar.json -> Notifications:
-//   "newPaperUploadMessage": "تم رفع ورقة بحثية جديدة بعنوان \"{title}\"."
+//   "newPaperUploadMessage": "تم رفع ورقة بحثية جديدة بعنوان \"{title}\" بواسطة {username}.",
+//   "unknownUser": "مستخدم غير معروف"

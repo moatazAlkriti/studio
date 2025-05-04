@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 "use client";
 
@@ -29,6 +30,7 @@ import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import type { StoredPaper } from "./paper-list"; // Import shared type
+import { addNotification } from "@/lib/notifications"; // Import notification utility
 
 // Define the shape of the data needed for the edit form
 export type EditPaperData = Pick<StoredPaper, 'title' | 'authors' | 'abstract'>;
@@ -44,12 +46,30 @@ interface EditPaperFormProps {
   isOpen: boolean;
   onClose: () => void;
   paperData?: EditPaperData; // Make optional to handle initial state
+  originalPaperId?: string; // Pass the original ID for notifications
+  originalPaperTitle?: string; // Pass the original title for notifications
   onSave: (data: EditPaperData) => void;
 }
 
-export function EditPaperForm({ isOpen, onClose, paperData, onSave }: EditPaperFormProps) {
+export function EditPaperForm({
+  isOpen,
+  onClose,
+  paperData,
+  originalPaperId,
+  originalPaperTitle,
+  onSave
+}: EditPaperFormProps) {
   const t = useTranslations('EditPaperForm');
+  const tNotify = useTranslations('Notifications'); // Notification translations
   const [isSaving, setIsSaving] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null); // State for current user
+
+  // Get current username on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUsername(localStorage.getItem('researchHubUsername'));
+    }
+  }, []);
 
   // Create schema with translations
   const formSchema = getEditFormSchema(t);
@@ -64,7 +84,7 @@ export function EditPaperForm({ isOpen, onClose, paperData, onSave }: EditPaperF
     if (paperData) {
       form.reset(paperData);
     } else {
-      // Optionally reset to empty if dialog opens without data (though typically it will have data)
+      // Optionally reset to empty if dialog opens without data
       form.reset({ title: "", authors: "", abstract: "" });
     }
   }, [paperData, form, isOpen]); // Add isOpen to reset when dialog opens
@@ -74,8 +94,20 @@ export function EditPaperForm({ isOpen, onClose, paperData, onSave }: EditPaperF
     // Simulate saving (in a real app, call an API)
     setTimeout(() => {
       onSave(values); // Pass the updated data back
+
+      // Add notification for admin about the update
+      if (originalPaperId && originalPaperTitle) {
+        addNotification(
+          tNotify('paperUpdatedMessage', {
+              title: originalPaperTitle, // Use original title for reference
+              username: currentUsername || tNotify('unknownUser'),
+          }),
+          'admin' // Send to admin
+        );
+      }
+
       setIsSaving(false);
-      // onClose(); // The parent component now handles closing on successful save
+      // Parent component handles closing on successful save
     }, 500); // Simulate network delay
   }
 
@@ -84,7 +116,6 @@ export function EditPaperForm({ isOpen, onClose, paperData, onSave }: EditPaperF
     if (!open) {
       onClose(); // Call the onClose handler when the dialog is closed
     }
-    // Note: We don't control the opening from here, only the closing
   };
 
 

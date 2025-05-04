@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { addNotification } from '@/lib/notifications'; // Import the notification utility
 
 // Schema generation function
 const getFormSchema = (t: ReturnType<typeof useTranslations<'LoginPage'>>) => z.object({
@@ -31,6 +33,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const t = useTranslations('LoginPage');
+  const tNotify = useTranslations('Notifications'); // Notifications translations
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,8 +52,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
     // Simulate authentication check
     setTimeout(() => {
-      // Simple check for admin user
-      if (values.username === 'admin' && values.password === 'admin') {
+      // Simple check for admin user or any other valid user (replace with actual auth logic)
+      // For demo, assume any non-empty username/password is valid if not admin
+      const isValidUser = (values.username === 'admin' && values.password === 'admin') || (values.username.length > 0 && values.password.length > 0);
+
+      if (isValidUser) {
         toast({
           title: t('loginSuccessTitle'),
           description: t('loginSuccessDescription', { username: values.username }),
@@ -60,9 +66,18 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
             localStorage.setItem('isLoggedInResearchHub', 'true');
             localStorage.setItem('researchHubUsername', values.username); // Store username
         }
+
+        // Add notification for admin if a non-admin user logs in
+        if (values.username !== 'admin') {
+          addNotification(
+            tNotify('userLoggedInMessage', { username: values.username }),
+            'admin' // Send to admin
+          );
+        }
+
         onLoginSuccess();
       } else {
-        // Handle other users or invalid login
+        // Handle invalid login
         toast({
           variant: 'destructive',
           title: t('loginFailedTitle'),

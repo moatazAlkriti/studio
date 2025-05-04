@@ -211,13 +211,21 @@
   "Notifications": {
      "notifications": "الإشعارات",
      "noNotifications": "لا توجد إشعارات جديدة.",
-     "newPaperUploadMessage": "تم رفع ورقة بحثية جديدة بعنوان \"{title}\".",
+     "newPaperUploadMessage": "تم رفع ورقة بحثية جديدة بعنوان \"{title}\" بواسطة {username}.",
+     "paperUpdatedMessage": "تم تحديث الورقة \"{title}\" بواسطة {username}.",
+     "paperDeletedMessage": "تم حذف الورقة \"{title}\" بواسطة {username}.",
+     "userLoggedInMessage": "قام المستخدم \"{username}\" بتسجيل الدخول.",
+     "userAddedMessage": "تمت إضافة مستخدم جديد \"{username}\" بواسطة {adminUsername}.",
+     "userDeletedMessage": "تم حذف المستخدم \"{username}\" بواسطة {adminUsername}.",
+     "supervisorAddedMessage": "تمت إضافة مشرف جديد \"{name}\" بواسطة {adminUsername}.",
+     "supervisorDeletedMessage": "تم حذف المشرف \"{name}\" بواسطة {adminUsername}.",
      "justNow": "الآن",
      "minutesAgo": "{count, plural, =1 {منذ دقيقة واحدة} =2 {منذ دقيقتين} few {منذ {count} دقائق} many {منذ {count} دقيقة} other {منذ {count} دقيقة}}",
      "hoursAgo": "{count, plural, =1 {منذ ساعة واحدة} =2 {منذ ساعتين} few {منذ {count} ساعات} many {منذ {count} ساعة} other {منذ {count} ساعة}}",
      "daysAgo": "{count, plural, =1 {منذ يوم واحد} =2 {منذ يومين} few {منذ {count} أيام} many {منذ {count} يومًا} other {منذ {count} يوم}}",
      "unreadIndicatorLabel": "إشعارات غير مقروءة",
      "errorTitle": "خطأ في الإشعار",
-     "errorMarkRead": "تعذر تحديث حالة الإشعار."
+     "errorMarkRead": "تعذر تحديث حالة الإشعار.",
+     "unknownUser": "مستخدم غير معروف"
   }
 }

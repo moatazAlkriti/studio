@@ -1,7 +1,8 @@
+
 // @ts-nocheck
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -20,17 +21,16 @@ import { useToast } from '@/hooks/use-toast';
 import { ShieldCheck, Users, UserPlus, Trash2, UserCheck } from "lucide-react"; // Added UserCheck
 import { Separator } from '@/components/ui/separator';
 import { useTranslations } from 'next-intl';
+import { addNotification } from '@/lib/notifications'; // Import notification utility
 
 // --- Data Structures ---
 
-// Category data
 interface PaperCategory {
   id: string;
   name: string;
   paperCount: number;
 }
 
-// Paper data
 interface ResearchPaperAdmin {
   id: string;
   title: string;
@@ -38,14 +38,12 @@ interface ResearchPaperAdmin {
   accessLevel: 'public' | 'private';
 }
 
-// User data structure
 interface ManagedUser {
   id: string;
   username: string;
-  role: 'admin' | 'editor' | 'viewer'; // Example roles
+  role: 'admin' | 'editor' | 'viewer';
 }
 
-// NEW: Supervising Doctor data structure
 interface SupervisingDoctor {
   id: string;
   name: string;
@@ -66,13 +64,11 @@ const dummyPapers: ResearchPaperAdmin[] = [
   { id: '3', title: 'Study on AI Ethics', category: 'Computer Science', accessLevel: 'public' },
 ];
 
-// Initial dummy users
 const initialUsers: ManagedUser[] = [
   { id: 'user-1', username: 'jane.doe', role: 'editor' },
   { id: 'user-2', username: 'john.smith', role: 'viewer' },
 ];
 
-// NEW: Initial dummy supervisors
 const initialSupervisors: SupervisingDoctor[] = [
     { id: 'doc-1', name: 'Dr. Alice Williams', department: 'Computer Science'},
     { id: 'doc-2', name: 'Dr. Bob Davis', department: 'Biology' },
@@ -80,15 +76,13 @@ const initialSupervisors: SupervisingDoctor[] = [
 
 // --- Zod Schemas ---
 
-// Add User Schema
 const getAddUserSchema = (t: ReturnType<typeof useTranslations<'AdminPage'>>) => z.object({
   username: z.string().min(3, { message: t('usernameError') }),
   password: z.string().min(6, { message: t('passwordError') }),
 });
 
-// NEW: Add Supervisor Schema
 const getAddSupervisorSchema = (t: ReturnType<typeof useTranslations<'AdminPage'>>) => z.object({
-    name: z.string().min(5, { message: t('supervisorNameError') }), // Require a reasonable name length
+    name: z.string().min(5, { message: t('supervisorNameError') }),
     department: z.string().min(2, { message: t('departmentError') }),
 });
 
@@ -96,15 +90,24 @@ const getAddSupervisorSchema = (t: ReturnType<typeof useTranslations<'AdminPage'
 
 export default function AdminPage() {
   const t = useTranslations('AdminPage');
+  const tNotify = useTranslations('Notifications'); // Notification translations
   const { toast } = useToast();
   const [users, setUsers] = useState<ManagedUser[]>(initialUsers);
-  const [supervisors, setSupervisors] = useState<SupervisingDoctor[]>(initialSupervisors); // State for supervisors
+  const [supervisors, setSupervisors] = useState<SupervisingDoctor[]>(initialSupervisors);
   const [isAddingUser, setIsAddingUser] = useState(false);
-  const [isAddingSupervisor, setIsAddingSupervisor] = useState(false); // Loading state for adding supervisor
+  const [isAddingSupervisor, setIsAddingSupervisor] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null); // State for current admin user
 
-  // Dynamically create the schemas with translations
+  // Get current admin username on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUsername(localStorage.getItem('researchHubUsername'));
+    }
+  }, []);
+
+  // Schemas with translations
   const addUserSchema = getAddUserSchema(t);
-  const addSupervisorSchema = getAddSupervisorSchema(t); // Supervisor schema
+  const addSupervisorSchema = getAddSupervisorSchema(t);
 
   // --- Add User Form Handling ---
   const addUserForm = useForm<z.infer<typeof addUserSchema>>({
@@ -118,9 +121,19 @@ export default function AdminPage() {
       const newUser: ManagedUser = {
         id: `user-${Date.now()}`,
         username: values.username,
-        role: 'viewer',
+        role: 'viewer', // Default role, can be adjusted
       };
       setUsers(prevUsers => [...prevUsers, newUser]);
+
+      // Add notification for admin
+      addNotification(
+        tNotify('userAddedMessage', {
+          username: newUser.username,
+          adminUsername: currentUsername || tNotify('unknownUser')
+        }),
+        'admin' // Send only to admin (or maybe 'all' if desired)
+      );
+
       toast({
         title: t('userAddedTitle'),
         description: t('userAddedDescription', { username: values.username }),
@@ -133,6 +146,16 @@ export default function AdminPage() {
   // --- Delete User Handling ---
   const handleDeleteUser = (userId: string, username: string) => {
     setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+
+    // Add notification for admin
+    addNotification(
+      tNotify('userDeletedMessage', {
+        username: username,
+        adminUsername: currentUsername || tNotify('unknownUser')
+      }),
+      'admin' // Send only to admin
+    );
+
     toast({
       title: t('userDeletedTitle'),
       description: t('userDeletedDescription', { username }),
@@ -140,7 +163,7 @@ export default function AdminPage() {
     });
   };
 
-  // --- NEW: Add Supervisor Form Handling ---
+  // --- Add Supervisor Form Handling ---
   const addSupervisorForm = useForm<z.infer<typeof addSupervisorSchema>>({
       resolver: zodResolver(addSupervisorSchema),
       defaultValues: { name: '', department: '' },
@@ -155,6 +178,16 @@ export default function AdminPage() {
               department: values.department,
           };
           setSupervisors(prev => [...prev, newSupervisor]);
+
+          // Add notification for admin
+          addNotification(
+            tNotify('supervisorAddedMessage', {
+              name: newSupervisor.name,
+              adminUsername: currentUsername || tNotify('unknownUser')
+            }),
+            'admin' // Send only to admin
+          );
+
           toast({
               title: t('supervisorAddedTitle'),
               description: t('supervisorAddedDescription', { name: values.name }),
@@ -164,9 +197,19 @@ export default function AdminPage() {
       }, 500);
   }
 
-  // --- NEW: Delete Supervisor Handling ---
+  // --- Delete Supervisor Handling ---
   const handleDeleteSupervisor = (supervisorId: string, name: string) => {
       setSupervisors(prev => prev.filter(doc => doc.id !== supervisorId));
+
+      // Add notification for admin
+      addNotification(
+        tNotify('supervisorDeletedMessage', {
+          name: name,
+          adminUsername: currentUsername || tNotify('unknownUser')
+        }),
+        'admin' // Send only to admin
+      );
+
       toast({
           title: t('supervisorDeletedTitle'),
           description: t('supervisorDeletedDescription', { name }),
@@ -263,7 +306,7 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      {/* NEW: Manage Supervisors Card */}
+      {/* Manage Supervisors Card */}
       <Card className="transition-shadow duration-300 hover:shadow-lg">
           <CardHeader>
               <CardTitle className="flex items-center"><UserCheck className="mr-2 h-5 w-5" /> {t('manageSupervisorsTitle')}</CardTitle>
@@ -342,7 +385,7 @@ export default function AdminPage() {
           </CardContent>
       </Card>
 
-      {/* Existing Manage Categories Card */}
+      {/* Manage Categories Card */}
       <Card className="transition-shadow duration-300 hover:shadow-lg">
         <CardHeader>
           <CardTitle>{t('manageCategoriesTitle')}</CardTitle>
@@ -361,7 +404,7 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      {/* Existing Manage Papers Card */}
+      {/* Manage Papers Card */}
       <Card className="transition-shadow duration-300 hover:shadow-lg">
         <CardHeader>
           <CardTitle>{t('managePapersTitle')}</CardTitle>

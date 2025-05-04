@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 "use client"
 
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { format } from 'date-fns'; // For formatting date
 import { EditPaperForm, type EditPaperData } from "./edit-paper-form"; // Import the new Edit form
+import { addNotification } from "@/lib/notifications"; // Import notification utility
 
 // Type for paper data stored in localStorage (must match UploadForm)
 // Keep consistent with other components
@@ -47,6 +49,7 @@ type Paper = StoredPaper;
 export function PaperList() {
   const t = useTranslations('PaperList');
   const tEdit = useTranslations('EditPaperForm'); // Translations for the edit form
+  const tNotify = useTranslations('Notifications'); // Notification translations
   const { toast } = useToast();
   const [papers, setPapers] = useState<Paper[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,6 +58,7 @@ export function PaperList() {
   const [paperToDelete, setPaperToDelete] = useState<Paper | null>(null); // State for delete confirmation
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
   const [editingPaper, setEditingPaper] = useState<Paper | null>(null); // State for paper being edited
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null); // State for current user
 
   useEffect(() => {
     // Ensure this runs only on the client
@@ -63,23 +67,22 @@ export function PaperList() {
     if (username === 'admin') {
       setIsAdmin(true);
     }
+    setCurrentUsername(username); // Store current username
 
     // Fetch data from localStorage
     setIsLoading(true);
     try {
         const storedPapersJSON = localStorage.getItem('researchHubPapers');
         if (storedPapersJSON) {
-            // Basic validation: check if it's an array
             const parsedPapers = JSON.parse(storedPapersJSON);
             if (Array.isArray(parsedPapers)) {
                 setPapers(parsedPapers);
             } else {
                 console.warn("Invalid data format in localStorage 'researchHubPapers', using fallback.");
                 setPapers(initialDummyPapers);
-                localStorage.setItem('researchHubPapers', JSON.stringify(initialDummyPapers)); // Reset localStorage
+                localStorage.setItem('researchHubPapers', JSON.stringify(initialDummyPapers));
             }
         } else {
-            // If nothing in storage, use initial dummy data and store it
             setPapers(initialDummyPapers);
             localStorage.setItem('researchHubPapers', JSON.stringify(initialDummyPapers));
         }
@@ -91,9 +94,9 @@ export function PaperList() {
     }
   }, []); // Run only once on mount
 
-   // Update local storage when papers change (e.g., after delete or edit)
+   // Update local storage when papers change
    useEffect(() => {
-     if (isClient && !isLoading) { // Only run on client after initial load/modification
+     if (isClient && !isLoading) {
        try {
            localStorage.setItem('researchHubPapers', JSON.stringify(papers));
        } catch (error) {
@@ -105,7 +108,7 @@ export function PaperList() {
            })
        }
      }
-   }, [papers, isClient, isLoading, t, toast]); // Added toast to dependency array
+   }, [papers, isClient, isLoading, t, toast]);
 
   const handleEditPaper = (paper: Paper) => {
     setEditingPaper(paper);
@@ -138,13 +141,26 @@ export function PaperList() {
 
 
   const handleDeletePaper = (paperId: string) => {
-    // Find the paper title before deleting for the toast message
-    const paperTitle = papers.find(p => p.id === paperId)?.title || t('unknownPaperTitle');
+    const paperToDeleteInfo = papers.find(p => p.id === paperId);
+    if (!paperToDeleteInfo) return;
+
+    const paperTitle = paperToDeleteInfo.title || t('unknownPaperTitle');
+
     // Update state (this triggers the useEffect to update localStorage)
     setPapers(prevPapers => prevPapers.filter(paper => paper.id !== paperId));
+
+    // Add notification for admin about the deletion
+    addNotification(
+      tNotify('paperDeletedMessage', {
+        title: paperTitle,
+        username: currentUsername || tNotify('unknownUser')
+      }),
+      'admin' // Send to admin
+    );
+
     toast({
       title: t('deletePaperTitle'),
-      description: t('deletePaperSuccessDescription', { title: paperTitle }), // Use specific success message
+      description: t('deletePaperSuccessDescription', { title: paperTitle }),
       variant: 'destructive',
     });
     setPaperToDelete(null); // Close the dialog
@@ -160,10 +176,7 @@ export function PaperList() {
        return;
      }
 
-     // Option 1: Open in new tab (browser PDF viewer)
-     // window.open(paper.fileDataUrl, '_blank');
-
-     // Option 2: Trigger download
+     // Trigger download
      const link = document.createElement('a');
      link.href = paper.fileDataUrl;
      link.download = paper.fileName || `paper-${paper.id}.pdf`; // Provide a filename
@@ -275,12 +288,11 @@ export function PaperList() {
                     <CardContent>
                       <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{paper.abstract}</p>
                       <div className="flex items-center justify-between">
-                          {/* Download Button */}
                            <Button
                              variant="outline"
                              size="sm"
                              onClick={() => handleViewOrDownloadPaper(paper)}
-                             disabled={!paper.fileDataUrl} // Disable if no data URL
+                             disabled={!paper.fileDataUrl}
                              className="transition-colors duration-200 hover:bg-primary/10"
                              aria-label={t('downloadActionLabel', { title: paper.title })}
                             >
@@ -288,14 +300,12 @@ export function PaperList() {
                              {t('downloadButton')}
                            </Button>
 
-                         {/* Admin Actions */}
                          {isAdmin && (
                            <div className="flex space-x-2">
-                             {/* Edit Button */}
                              <Button
                                variant="outline"
                                size="sm"
-                               onClick={() => handleEditPaper(paper)} // Pass the whole paper object
+                               onClick={() => handleEditPaper(paper)}
                                className="transition-colors duration-200 hover:bg-accent hover:text-accent-foreground"
                                aria-label={t('editActionLabel', { title: paper.title })}
                              >
@@ -303,14 +313,13 @@ export function PaperList() {
                                {t('editButton')}
                              </Button>
 
-                             {/* Delete Button with Confirmation */}
                              <AlertDialog open={paperToDelete?.id === paper.id} onOpenChange={(open) => !open && setPaperToDelete(null)}>
                                 <AlertDialogTrigger asChild>
                                    <Button
                                      variant="destructive"
                                      size="sm"
                                      className="transition-colors duration-200 hover:bg-destructive/90"
-                                     onClick={() => setPaperToDelete(paper)} // Set paper for confirmation
+                                     onClick={() => setPaperToDelete(paper)}
                                      aria-label={t('deleteActionLabel', { title: paper.title })}
                                    >
                                      <Trash2 className="mr-1 h-4 w-4" />
@@ -351,55 +360,10 @@ export function PaperList() {
            isOpen={isEditDialogOpen}
            onClose={handleCancelEdit}
            paperData={editingPaper ? { title: editingPaper.title, authors: editingPaper.authors, abstract: editingPaper.abstract } : undefined}
+           originalPaperId={editingPaper?.id} // Pass ID
+           originalPaperTitle={editingPaper?.title} // Pass title
            onSave={handleSaveChanges}
         />
     </>
   )
 }
-
-// Add EditPaperForm translations to JSON files if not already present
-// en.json:
-// "EditPaperForm": {
-//   "dialogTitle": "Edit Paper Details",
-//   "dialogDescription": "Modify the metadata for the selected paper. File content cannot be changed.",
-//   "paperTitleLabel": "Title",
-//   "paperTitlePlaceholder": "Enter the new paper title",
-//   "paperTitleError": "Title must be at least 2 characters.",
-//   "authorsLabel": "Authors",
-//   "authorsPlaceholder": "e.g., John Doe, Jane Smith",
-//   "authorsDescription": "Comma-separated list of authors.",
-//   "authorsError": "Authors must be at least 2 characters.",
-//   "abstractLabel": "Abstract",
-//   "abstractPlaceholder": "Enter the new paper abstract",
-//   "abstractError": "Abstract must be at least 10 characters.",
-//   "saveButton": "Save Changes",
-//   "savingButton": "Saving...",
-//   "cancelButton": "Cancel",
-//   "editSuccessTitle": "Paper Updated",
-//   "editSuccessDescription": "Metadata for \"{title}\" has been updated.",
-//   "editErrorTitle": "Update Failed",
-//   "editErrorDescription": "Could not update the paper metadata. Please try again."
-// }
-// ar.json:
-// "EditPaperForm": {
-//   "dialogTitle": "تعديل تفاصيل الورقة",
-//   "dialogDescription": "قم بتعديل البيانات الوصفية للورقة المحددة. لا يمكن تغيير محتوى الملف.",
-//   "paperTitleLabel": "العنوان",
-//   "paperTitlePlaceholder": "أدخل عنوان الورقة الجديد",
-//   "paperTitleError": "يجب أن يكون العنوان مكونًا من حرفين على الأقل.",
-//   "authorsLabel": "المؤلفون",
-//   "authorsPlaceholder": "مثال: جون دو، جين سميث",
-//   "authorsDescription": "قائمة المؤلفين مفصولة بفواصل.",
-//   "authorsError": "يجب أن يكون اسم المؤلفين مكونًا من حرفين على الأقل.",
-//   "abstractLabel": "الملخص",
-//   "abstractPlaceholder": "أدخل ملخص الورقة الجديد",
-//   "abstractError": "يجب أن يكون الملخص مكونًا من 10 أحرف على الأقل.",
-//   "saveButton": "حفظ التغييرات",
-//   "savingButton": "جار الحفظ...",
-//   "cancelButton": "إلغاء",
-//   "editSuccessTitle": "تم تحديث الورقة",
-//   "editSuccessDescription": "تم تحديث البيانات الوصفية لـ \"{title}\".",
-//   "editErrorTitle": "فشل التحديث",
-//   "editErrorDescription": "تعذر تحديث البيانات الوصفية للورقة. يرجى المحاولة مرة أخرى."
-// }
-

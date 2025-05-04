@@ -211,13 +211,21 @@
    "Notifications": {
       "notifications": "Notifications",
       "noNotifications": "No new notifications.",
-      "newPaperUploadMessage": "New paper \"{title}\" uploaded.",
+      "newPaperUploadMessage": "New paper \"{title}\" uploaded by {username}.",
+      "paperUpdatedMessage": "Paper \"{title}\" updated by {username}.",
+      "paperDeletedMessage": "Paper \"{title}\" deleted by {username}.",
+      "userLoggedInMessage": "User \"{username}\" logged in.",
+      "userAddedMessage": "New user \"{username}\" added by {adminUsername}.",
+      "userDeletedMessage": "User \"{username}\" deleted by {adminUsername}.",
+      "supervisorAddedMessage": "New supervisor \"{name}\" added by {adminUsername}.",
+      "supervisorDeletedMessage": "Supervisor \"{name}\" deleted by {adminUsername}.",
       "justNow": "just now",
       "minutesAgo": "{count, plural, =1 {# minute ago} other {# minutes ago}}",
       "hoursAgo": "{count, plural, =1 {# hour ago} other {# hours ago}}",
       "daysAgo": "{count, plural, =1 {# day ago} other {# days ago}}",
       "unreadIndicatorLabel": "Unread notifications",
       "errorTitle": "Notification Error",
-      "errorMarkRead": "Could not update notification status."
+      "errorMarkRead": "Could not update notification status.",
+      "unknownUser": "an unknown user"
    }
 }
