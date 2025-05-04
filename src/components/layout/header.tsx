@@ -16,13 +16,16 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { locales } from '@/navigation'; // Import locales
 import { ThemeToggleButton } from '@/components/theme-toggle-button'; // Import ThemeToggleButton
+import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 // Placeholder type for notifications
-interface Notification {
+// Export the type so other components can use it
+export interface Notification {
     id: string;
     message: string;
     timestamp: string; // ISO string
     read: boolean;
+    recipient: 'admin' | 'all' | string; // 'admin', 'all', or specific user ID
 }
 
 export function Header() {
@@ -31,12 +34,34 @@ export function Header() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const { toast } = useToast(); // Use toast for potential errors
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Add login state
   const [isClient, setIsClient] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]); // State for notifications
   const [hasUnread, setHasUnread] = useState(false); // State for unread indicator
+
+  // Function to load and filter notifications
+  const loadNotifications = () => {
+    if (typeof window !== 'undefined') {
+      const storedNotificationsJSON = localStorage.getItem('researchHubNotifications');
+      const allNotifications: Notification[] = storedNotificationsJSON ? JSON.parse(storedNotificationsJSON) : [];
+      const username = localStorage.getItem('researchHubUsername');
+      const isAdminUser = username === 'admin';
+
+      // Filter notifications based on recipient
+      const userNotifications = allNotifications.filter(n =>
+          n.recipient === 'all' || // Show 'all' notifications to everyone
+          (isAdminUser && n.recipient === 'admin') // Show 'admin' notifications only to admin
+          // Add logic here if you have user-specific notifications based on username/ID
+          // || n.recipient === username
+      );
+
+      setNotifications(userNotifications);
+      setHasUnread(userNotifications.some(n => !n.read));
+    }
+  };
 
   useEffect(() => {
     // Ensure this runs only on the client
@@ -53,16 +78,20 @@ export function Header() {
         setIsAdmin(false);
     }
 
-    // Placeholder: Fetch or load notifications (e.g., from localStorage or API)
-    const dummyNotifications: Notification[] = [
-      // Example notifications (replace with real data source)
-      // { id: '1', message: 'New paper "AI Ethics" uploaded.', timestamp: new Date(Date.now() - 3600000).toISOString(), read: false }, // 1 hour ago
-      // { id: '2', message: 'User "jane.doe" was added.', timestamp: new Date(Date.now() - 86400000).toISOString(), read: true }, // 1 day ago
-    ];
-    setNotifications(dummyNotifications);
-    setHasUnread(dummyNotifications.some(n => !n.read));
+    loadNotifications(); // Load notifications on initial mount
 
-  }, []);
+    // Optional: Set up an interval to check for new notifications periodically
+    // const intervalId = setInterval(loadNotifications, 30000); // Check every 30 seconds
+    // return () => clearInterval(intervalId); // Cleanup interval on unmount
+
+  }, []); // Run only on mount
+
+  // Refresh notifications when the dropdown is opened
+  const handleDropdownOpenChange = (open: boolean) => {
+      if (open) {
+          loadNotifications();
+      }
+  }
 
   const handleLanguageChange = (newLocale: string) => {
     router.push(pathname, { locale: newLocale });
@@ -74,6 +103,8 @@ export function Header() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isLoggedInResearchHub');
       localStorage.removeItem('researchHubUsername');
+      // Optionally clear notifications on logout if they are sensitive
+      // localStorage.removeItem('researchHubNotifications');
     }
     // Refresh or redirect to ensure state is cleared
     // router.push('/', { locale }); // Redirect to home page after logout
@@ -81,11 +112,28 @@ export function Header() {
   };
 
   const handleMarkAsRead = (notificationId: string) => {
+    // Update the state locally first for immediate feedback
     setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
-    // Check if any unread notifications remain after marking one as read
-    const remainingUnread = notifications.some(n => n.id !== notificationId && !n.read);
-    setHasUnread(remainingUnread);
-    // TODO: Persist read status (e.g., update API or localStorage)
+    setHasUnread(notifications.some(n => n.id !== notificationId && !n.read)); // Recalculate unread status
+
+    // Update the full list in localStorage
+     if (typeof window !== 'undefined') {
+       try {
+           const storedNotificationsJSON = localStorage.getItem('researchHubNotifications');
+           const allNotifications: Notification[] = storedNotificationsJSON ? JSON.parse(storedNotificationsJSON) : [];
+           const updatedAllNotifications = allNotifications.map(n =>
+               n.id === notificationId ? { ...n, read: true } : n
+           );
+           localStorage.setItem('researchHubNotifications', JSON.stringify(updatedAllNotifications));
+       } catch (error) {
+           console.error("Error updating notification read status in localStorage:", error);
+           toast({
+               variant: "destructive",
+               title: tNotify('errorTitle'),
+               description: tNotify('errorMarkRead'),
+           })
+       }
+     }
   };
 
   // Simple time ago formatter (replace with a library like date-fns for more robust formatting)
@@ -97,9 +145,10 @@ export function Header() {
     const diffInHours = Math.floor(diffInMinutes / 60);
     const diffInDays = Math.floor(diffInHours / 24);
 
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    return `${diffInDays}d ago`;
+    if (diffInMinutes < 1) return tNotify('justNow');
+    if (diffInMinutes < 60) return tNotify('minutesAgo', { count: diffInMinutes });
+    if (diffInHours < 24) return tNotify('hoursAgo', { count: diffInHours });
+    return tNotify('daysAgo', { count: diffInDays });
   };
 
 
@@ -116,6 +165,8 @@ export function Header() {
            <div className="flex items-center space-x-2">
              <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
              <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+             <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+             {/* Add skeleton for notification bell */}
              <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
            </div>
          </div>
@@ -153,16 +204,16 @@ export function Header() {
 
            {/* Notification Dropdown - Only show if logged in */}
            {isLoggedIn && (
-              <DropdownMenu>
+              <DropdownMenu onOpenChange={handleDropdownOpenChange}> {/* Refresh on open */}
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label={tNotify('notifications')} className="relative">
                     <Bell className="h-5 w-5" />
                     {hasUnread && (
-                      <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-destructive ring-2 ring-background" />
+                      <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-destructive ring-2 ring-background" aria-label={tNotify('unreadIndicatorLabel')}/>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80"> {/* Increased width */}
+                <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto"> {/* Increased width and added scroll */}
                   <DropdownMenuLabel>{tNotify('notifications')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {notifications.length > 0 ? (
@@ -174,11 +225,14 @@ export function Header() {
                             if (!notification.read) {
                                 handleMarkAsRead(notification.id);
                             }
+                            // Optionally navigate somewhere on click?
+                            // e.g., if notification relates to a specific paper
                          }}
-                         className={`flex items-start justify-between gap-2 ${!notification.read ? 'font-semibold' : 'text-muted-foreground'}`}
+                         className={`flex items-start justify-between gap-2 cursor-pointer ${!notification.read ? 'font-semibold' : 'text-muted-foreground'}`}
                       >
-                        <span className="flex-1 text-sm leading-tight">{notification.message}</span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(notification.timestamp)}</span>
+                          {!notification.read && <span className="absolute left-1 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
+                           <span className={`flex-1 text-sm leading-tight ${!notification.read ? 'ml-3' : 'ml-0'}`}>{notification.message}</span>
+                           <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(notification.timestamp)}</span>
                       </DropdownMenuItem>
                     ))
                   ) : (
@@ -222,3 +276,21 @@ export function Header() {
     </header>
   );
 }
+
+// Add needed translations to JSON files:
+// en.json -> Notifications:
+//   "justNow": "just now",
+//   "minutesAgo": "{count, plural, =1 {# minute ago} other {# minutes ago}}",
+//   "hoursAgo": "{count, plural, =1 {# hour ago} other {# hours ago}}",
+//   "daysAgo": "{count, plural, =1 {# day ago} other {# days ago}}",
+//   "unreadIndicatorLabel": "Unread notifications",
+//   "errorTitle": "Notification Error",
+//   "errorMarkRead": "Could not update notification status."
+// ar.json -> Notifications:
+//   "justNow": "الآن",
+//   "minutesAgo": "{count, plural, =1 {منذ دقيقة واحدة} =2 {منذ دقيقتين} few {منذ {count} دقائق} many {منذ {count} دقيقة} other {منذ {count} دقيقة}}",
+//   "hoursAgo": "{count, plural, =1 {منذ ساعة واحدة} =2 {منذ ساعتين} few {منذ {count} ساعات} many {منذ {count} ساعة} other {منذ {count} ساعة}}",
+//   "daysAgo": "{count, plural, =1 {منذ يوم واحد} =2 {منذ يومين} few {منذ {count} أيام} many {منذ {count} يومًا} other {منذ {count} يوم}}",
+//   "unreadIndicatorLabel": "إشعارات غير مقروءة",
+//   "errorTitle": "خطأ في الإشعار",
+//   "errorMarkRead": "تعذر تحديث حالة الإشعار."

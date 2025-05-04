@@ -17,9 +17,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Upload, Loader2 } from "lucide-react" // Added Loader2
-import { useState, type ChangeEvent } from "react"
+import { Upload, Loader2 } from "lucide-react"
+import { useState, type ChangeEvent, useEffect } from "react" // Added useEffect
 import { useTranslations } from "next-intl";
+import type { Notification } from '@/components/layout/header'; // Import Notification type
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
@@ -46,7 +47,7 @@ const getFormSchema = (t: ReturnType<typeof useTranslations<'UploadForm'>>) => z
 });
 
 // Type for paper data stored in localStorage
-interface StoredPaper {
+export interface StoredPaper {
     id: string;
     title: string;
     authors: string;
@@ -61,9 +62,21 @@ interface StoredPaper {
 
 export function UploadForm() {
   const t = useTranslations('UploadForm');
+  const tNotify = useTranslations('Notifications'); // Notification translations
   const { toast } = useToast()
   const [fileName, setFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false); // Loading state
+  const [isAdminUser, setIsAdminUser] = useState(false); // State to check if user is admin
+
+  // Check if the user is admin on mount
+  useEffect(() => {
+      if (typeof window !== 'undefined') {
+          const username = localStorage.getItem('researchHubUsername');
+          if (username === 'admin') {
+              setIsAdminUser(true);
+          }
+      }
+  }, []);
 
   // Create schema with translations
   const formSchema = getFormSchema(t);
@@ -118,13 +131,32 @@ export function UploadForm() {
             uploadDate: new Date().toISOString(),
         };
 
-        // Save to localStorage
+        // --- Save Paper to localStorage ---
         const existingPapersJSON = localStorage.getItem('researchHubPapers');
         const existingPapers: StoredPaper[] = existingPapersJSON ? JSON.parse(existingPapersJSON) : [];
         existingPapers.push(newPaper);
         localStorage.setItem('researchHubPapers', JSON.stringify(existingPapers));
 
+        // --- Add Notification for Admin ---
+        if (!isAdminUser) { // Only notify if the uploader is NOT admin
+            const newNotification: Notification = {
+                id: `notif-upload-${Date.now()}`,
+                message: tNotify('newPaperUploadMessage', { title: newPaper.title }),
+                timestamp: new Date().toISOString(),
+                read: false,
+                recipient: 'admin' // Target admin
+            };
 
+            const existingNotificationsJSON = localStorage.getItem('researchHubNotifications');
+            const existingNotifications: Notification[] = existingNotificationsJSON ? JSON.parse(existingNotificationsJSON) : [];
+            existingNotifications.unshift(newNotification); // Add to the beginning
+             // Optional: Limit the number of stored notifications if needed
+             const MAX_NOTIFICATIONS = 50;
+             const limitedNotifications = existingNotifications.slice(0, MAX_NOTIFICATIONS);
+            localStorage.setItem('researchHubNotifications', JSON.stringify(limitedNotifications));
+        }
+
+        // --- Show Success Toast & Reset Form ---
         toast({
             title: t('uploadSuccessTitle'),
             description: t('uploadSuccessDescription', { title: values.title }),
@@ -266,3 +298,9 @@ export function UploadForm() {
     </Card>
   )
 }
+
+// Add needed translations to JSON files:
+// en.json -> Notifications:
+//   "newPaperUploadMessage": "New paper \"{title}\" uploaded."
+// ar.json -> Notifications:
+//   "newPaperUploadMessage": "تم رفع ورقة بحثية جديدة بعنوان \"{title}\"."
