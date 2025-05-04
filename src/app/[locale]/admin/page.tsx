@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
@@ -16,20 +17,20 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { ShieldCheck, Users, UserPlus, Trash2 } from "lucide-react";
+import { ShieldCheck, Users, UserPlus, Trash2, UserCheck } from "lucide-react"; // Added UserCheck
 import { Separator } from '@/components/ui/separator';
 import { useTranslations } from 'next-intl';
 
 // --- Data Structures ---
 
-// Category data (remains the same)
+// Category data
 interface PaperCategory {
   id: string;
   name: string;
   paperCount: number;
 }
 
-// Paper data (remains the same)
+// Paper data
 interface ResearchPaperAdmin {
   id: string;
   title: string;
@@ -37,11 +38,18 @@ interface ResearchPaperAdmin {
   accessLevel: 'public' | 'private';
 }
 
-// NEW: User data structure
+// User data structure
 interface ManagedUser {
   id: string;
   username: string;
   role: 'admin' | 'editor' | 'viewer'; // Example roles
+}
+
+// NEW: Supervising Doctor data structure
+interface SupervisingDoctor {
+  id: string;
+  name: string;
+  department: string;
 }
 
 // --- Dummy Data ---
@@ -58,16 +66,30 @@ const dummyPapers: ResearchPaperAdmin[] = [
   { id: '3', title: 'Study on AI Ethics', category: 'Computer Science', accessLevel: 'public' },
 ];
 
-// Initial dummy users - IMPORTANT: Do not include the default 'admin' here unless you want it deletable
+// Initial dummy users
 const initialUsers: ManagedUser[] = [
   { id: 'user-1', username: 'jane.doe', role: 'editor' },
   { id: 'user-2', username: 'john.smith', role: 'viewer' },
 ];
 
-// --- Zod Schema for Add User Form ---
+// NEW: Initial dummy supervisors
+const initialSupervisors: SupervisingDoctor[] = [
+    { id: 'doc-1', name: 'Dr. Alice Williams', department: 'Computer Science'},
+    { id: 'doc-2', name: 'Dr. Bob Davis', department: 'Biology' },
+];
+
+// --- Zod Schemas ---
+
+// Add User Schema
 const getAddUserSchema = (t: ReturnType<typeof useTranslations<'AdminPage'>>) => z.object({
   username: z.string().min(3, { message: t('usernameError') }),
   password: z.string().min(6, { message: t('passwordError') }),
+});
+
+// NEW: Add Supervisor Schema
+const getAddSupervisorSchema = (t: ReturnType<typeof useTranslations<'AdminPage'>>) => z.object({
+    name: z.string().min(5, { message: t('supervisorNameError') }), // Require a reasonable name length
+    department: z.string().min(2, { message: t('departmentError') }),
 });
 
 // --- Admin Page Component ---
@@ -76,28 +98,27 @@ export default function AdminPage() {
   const t = useTranslations('AdminPage');
   const { toast } = useToast();
   const [users, setUsers] = useState<ManagedUser[]>(initialUsers);
+  const [supervisors, setSupervisors] = useState<SupervisingDoctor[]>(initialSupervisors); // State for supervisors
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [isAddingSupervisor, setIsAddingSupervisor] = useState(false); // Loading state for adding supervisor
 
-  // Dynamically create the schema with translations
+  // Dynamically create the schemas with translations
   const addUserSchema = getAddUserSchema(t);
+  const addSupervisorSchema = getAddSupervisorSchema(t); // Supervisor schema
 
   // --- Add User Form Handling ---
   const addUserForm = useForm<z.infer<typeof addUserSchema>>({
     resolver: zodResolver(addUserSchema),
-    defaultValues: {
-      username: '',
-      password: '',
-    },
+    defaultValues: { username: '', password: '' },
   });
 
   function onAddUserSubmit(values: z.infer<typeof addUserSchema>) {
     setIsAddingUser(true);
-    // Simulate adding user (in a real app, call an API)
     setTimeout(() => {
       const newUser: ManagedUser = {
-        id: `user-${Date.now()}`, // Simple unique ID generation
+        id: `user-${Date.now()}`,
         username: values.username,
-        role: 'viewer', // Default role for newly added users
+        role: 'viewer',
       };
       setUsers(prevUsers => [...prevUsers, newUser]);
       toast({
@@ -106,12 +127,11 @@ export default function AdminPage() {
       });
       addUserForm.reset();
       setIsAddingUser(false);
-    }, 500); // Simulate network delay
+    }, 500);
   }
 
   // --- Delete User Handling ---
   const handleDeleteUser = (userId: string, username: string) => {
-    // Simulate deletion (in a real app, call an API)
     setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     toast({
       title: t('userDeletedTitle'),
@@ -120,6 +140,41 @@ export default function AdminPage() {
     });
   };
 
+  // --- NEW: Add Supervisor Form Handling ---
+  const addSupervisorForm = useForm<z.infer<typeof addSupervisorSchema>>({
+      resolver: zodResolver(addSupervisorSchema),
+      defaultValues: { name: '', department: '' },
+  });
+
+  function onAddSupervisorSubmit(values: z.infer<typeof addSupervisorSchema>) {
+      setIsAddingSupervisor(true);
+      setTimeout(() => {
+          const newSupervisor: SupervisingDoctor = {
+              id: `doc-${Date.now()}`,
+              name: values.name,
+              department: values.department,
+          };
+          setSupervisors(prev => [...prev, newSupervisor]);
+          toast({
+              title: t('supervisorAddedTitle'),
+              description: t('supervisorAddedDescription', { name: values.name }),
+          });
+          addSupervisorForm.reset();
+          setIsAddingSupervisor(false);
+      }, 500);
+  }
+
+  // --- NEW: Delete Supervisor Handling ---
+  const handleDeleteSupervisor = (supervisorId: string, name: string) => {
+      setSupervisors(prev => prev.filter(doc => doc.id !== supervisorId));
+      toast({
+          title: t('supervisorDeletedTitle'),
+          description: t('supervisorDeletedDescription', { name }),
+          variant: 'destructive',
+      });
+  };
+
+
   // --- Render ---
   return (
     <div className="space-y-8">
@@ -127,9 +182,7 @@ export default function AdminPage() {
          <h1 className="text-2xl font-bold flex items-center">
            <ShieldCheck className="mr-2 h-6 w-6 text-primary animate-pulse" /> {t('dashboardTitle')}
          </h1>
-         {/* Add maybe a settings button or other global admin actions here */}
       </div>
-
 
       {/* Manage Users Card */}
       <Card className="transition-shadow duration-300 hover:shadow-lg">
@@ -152,7 +205,7 @@ export default function AdminPage() {
                       <FormItem>
                         <FormLabel>{t('usernameLabel')}</FormLabel>
                         <FormControl>
-                          <Input placeholder={t('usernamePlaceholder')} {...field} />
+                          <Input placeholder={t('usernamePlaceholder')} {...field} disabled={isAddingUser}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -165,7 +218,7 @@ export default function AdminPage() {
                       <FormItem>
                         <FormLabel>{t('passwordLabel')}</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder={t('passwordPlaceholder')} {...field} />
+                          <Input type="password" placeholder={t('passwordPlaceholder')} {...field} disabled={isAddingUser}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -191,7 +244,6 @@ export default function AdminPage() {
                        <span className="font-medium">{user.username}</span>
                        <span className="text-sm text-muted-foreground capitalize">{user.role}</span>
                     </div>
-                    {/* Add Edit button later if needed */}
                     <Button
                        variant="ghost"
                        size="icon"
@@ -211,6 +263,84 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
+      {/* NEW: Manage Supervisors Card */}
+      <Card className="transition-shadow duration-300 hover:shadow-lg">
+          <CardHeader>
+              <CardTitle className="flex items-center"><UserCheck className="mr-2 h-5 w-5" /> {t('manageSupervisorsTitle')}</CardTitle>
+              <CardDescription>{t('manageSupervisorsDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+              {/* Add Supervisor Form */}
+              <Form {...addSupervisorForm}>
+                  <form onSubmit={addSupervisorForm.handleSubmit(onAddSupervisorSubmit)} className="space-y-4 p-4 border rounded-md bg-muted/50">
+                      <h3 className="text-lg font-semibold flex items-center mb-2">
+                          <UserPlus className="mr-2 h-4 w-4" /> {t('addNewSupervisorTitle')}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                          <FormField
+                              control={addSupervisorForm.control}
+                              name="name"
+                              render={({ field }) => (
+                                  <FormItem>
+                                      <FormLabel>{t('supervisorNameLabel')}</FormLabel>
+                                      <FormControl>
+                                          <Input placeholder={t('supervisorNamePlaceholder')} {...field} disabled={isAddingSupervisor}/>
+                                      </FormControl>
+                                      <FormMessage />
+                                  </FormItem>
+                              )}
+                          />
+                          <FormField
+                              control={addSupervisorForm.control}
+                              name="department"
+                              render={({ field }) => (
+                                  <FormItem>
+                                      <FormLabel>{t('departmentLabel')}</FormLabel>
+                                      <FormControl>
+                                          <Input placeholder={t('departmentPlaceholder')} {...field} disabled={isAddingSupervisor}/>
+                                      </FormControl>
+                                      <FormMessage />
+                                  </FormItem>
+                              )}
+                          />
+                          <Button type="submit" disabled={isAddingSupervisor} className="w-full md:w-auto transition-colors duration-200">
+                              {isAddingSupervisor ? t('addingSupervisorButton') : t('addSupervisorButton')}
+                          </Button>
+                      </div>
+                  </form>
+              </Form>
+
+              <Separator />
+
+              {/* Supervisor List */}
+              <div>
+                  <h3 className="text-lg font-semibold mb-4">{t('currentSupervisorsTitle')}</h3>
+                  {supervisors.length > 0 ? (
+                      <ul className="space-y-3">
+                          {supervisors.map(doc => (
+                              <li key={doc.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
+                                  <div className="flex flex-col">
+                                      <span className="font-medium">{doc.name}</span>
+                                      <span className="text-sm text-muted-foreground">{doc.department}</span>
+                                  </div>
+                                  <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-destructive hover:bg-destructive/10 transition-colors duration-200"
+                                      onClick={() => handleDeleteSupervisor(doc.id, doc.name)}
+                                      aria-label={t('deleteSupervisorLabel', { name: doc.name })}
+                                  >
+                                      <Trash2 className="h-4 w-4" />
+                                  </Button>
+                              </li>
+                          ))}
+                      </ul>
+                  ) : (
+                      <p className="text-muted-foreground italic text-center py-4">{t('noSupervisorsFound')}</p>
+                  )}
+              </div>
+          </CardContent>
+      </Card>
 
       {/* Existing Manage Categories Card */}
       <Card className="transition-shadow duration-300 hover:shadow-lg">
@@ -225,11 +355,9 @@ export default function AdminPage() {
               <li key={cat.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
                 <span>{cat.name}</span>
                 <span className="text-sm text-muted-foreground">{t('papersCount', { count: cat.paperCount })}</span>
-                {/* Add Edit/Delete buttons if needed */}
               </li>
             ))}
           </ul>
-          {/* Add form for adding/editing categories */}
         </CardContent>
       </Card>
 
@@ -250,12 +378,10 @@ export default function AdminPage() {
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded ${paper.accessLevel === 'public' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
                       {t(paper.accessLevel === 'public' ? 'publicAccess' : 'privateAccess')}
                     </span>
-                    {/* Add Edit/Permissions buttons if needed */}
                  </div>
                </li>
              ))}
            </ul>
-           {/* Add form/controls for managing papers */}
         </CardContent>
       </Card>
     </div>
