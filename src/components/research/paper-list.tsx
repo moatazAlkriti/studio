@@ -4,7 +4,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, List, Trash2, Edit, Download, Heart } from "lucide-react" // Added Heart icon
+import { FileText, List, Trash2, Edit, Download, Heart, Eye } from "lucide-react" // Added Eye icon
 import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
@@ -120,11 +120,13 @@ export function PaperList() {
            localStorage.setItem('researchHubPapers', JSON.stringify(papers));
        } catch (error) {
            console.error("Error writing papers to localStorage:", error);
-           toast({
-               variant: "destructive",
-               title: t('localStorageErrorTitle'),
-               description: t('localStorageWriteErrorDescription')
-           })
+            setTimeout(() => {
+               toast({
+                   variant: "destructive",
+                   title: t('localStorageErrorTitle'),
+                   description: t('localStorageWriteErrorDescription')
+               })
+            }, 0);
        }
      }
      // Removed `t` and `toast` from dependencies as they are stable
@@ -232,7 +234,7 @@ export function PaperList() {
     setPaperToDelete(null); // Close the dialog
   };
 
-   const handleViewOrDownloadPaper = (paper: Paper) => {
+   const handleDownloadPaper = (paper: Paper) => {
      if (!paper.fileDataUrl) {
        // Wrap toast call in setTimeout
        setTimeout(() => {
@@ -260,6 +262,21 @@ export function PaperList() {
            description: t('downloadStartedDescription', { fileName: paper.fileName }),
          });
      }, 0);
+   };
+
+   const handleViewPaper = (paper: Paper) => {
+    if (!paper.fileDataUrl) {
+      setTimeout(() => {
+        toast({
+          variant: "destructive",
+          title: t('viewErrorTitle'),
+          description: t('viewErrorNoData'),
+        });
+      }, 0);
+      return;
+    }
+    // Open the data URL in a new tab
+    window.open(paper.fileDataUrl, '_blank');
    };
 
    const toggleFavorite = (paperId: string, paperTitle: string) => {
@@ -321,9 +338,12 @@ export function PaperList() {
                      <Skeleton className="h-4 w-full mb-1" />
                      <Skeleton className="h-4 w-5/6 mb-3" />
                       <div className="flex items-center justify-between mt-3">
-                        <Skeleton className="h-8 w-24" /> {/* Skeleton for download button */}
                         <div className="flex space-x-2">
-                             <Skeleton className="h-8 w-8" /> {/* Skeleton for like button */}
+                          <Skeleton className="h-8 w-20" /> {/* View skeleton */}
+                          <Skeleton className="h-8 w-24" /> {/* Download skeleton */}
+                        </div>
+                        <div className="flex space-x-2">
+                             <Skeleton className="h-8 w-8" /> {/* Like skeleton */}
                             {/* Skeletons only if admin check would pass */}
                             {isAdmin && (
                                 <>
@@ -366,7 +386,10 @@ export function PaperList() {
                             <Skeleton className="h-4 w-full mb-1" />
                             <Skeleton className="h-4 w-5/6 mb-3" />
                             <div className="flex items-center justify-between mt-3">
-                              <Skeleton className="h-8 w-24" />
+                               <div className="flex space-x-2">
+                                  <Skeleton className="h-8 w-20" /> {/* View skeleton */}
+                                  <Skeleton className="h-8 w-24" /> {/* Download skeleton */}
+                               </div>
                                <div className="flex space-x-2 items-center">
                                   <Skeleton className="h-8 w-8" /> {/* Like button skeleton */}
                                   {isAdmin && ( // Show skeleton buttons for admin
@@ -400,20 +423,34 @@ export function PaperList() {
                         </CardHeader>
                         <CardContent>
                           <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{paper.abstract}</p>
-                          <div className="flex items-center justify-between">
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => handleViewOrDownloadPaper(paper)}
-                                 disabled={!paper.fileDataUrl}
-                                 className="transition-colors duration-200 hover:bg-primary/10"
-                                 aria-label={t('downloadActionLabel', { title: paper.title })}
-                                >
-                                 <Download className="mr-1 h-4 w-4" />
-                                 {t('downloadButton')}
-                               </Button>
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                               <div className="flex space-x-2 flex-wrap gap-2">
+                                  <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={() => handleViewPaper(paper)}
+                                     disabled={!paper.fileDataUrl}
+                                     className="transition-colors duration-200 hover:bg-secondary/80"
+                                     aria-label={t('viewActionLabel', { title: paper.title })}
+                                   >
+                                     <Eye className="mr-1 h-4 w-4" />
+                                     {t('viewButton')}
+                                   </Button>
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={() => handleDownloadPaper(paper)}
+                                     disabled={!paper.fileDataUrl}
+                                     className="transition-colors duration-200 hover:bg-primary/10"
+                                     aria-label={t('downloadActionLabel', { title: paper.title })}
+                                    >
+                                     <Download className="mr-1 h-4 w-4" />
+                                     {t('downloadButton')}
+                                   </Button>
+                               </div>
 
-                               <div className="flex space-x-2 items-center">
+
+                               <div className="flex space-x-2 items-center flex-wrap gap-2">
                                    <Button
                                       variant="ghost"
                                       size="icon"
@@ -493,3 +530,12 @@ export function PaperList() {
     </>
   )
 }
+
+// Add needed translations
+// en.json -> PaperList
+//   "viewButton": "View PDF",
+//   "viewActionLabel": "View PDF for {title}",
+// ar.json -> PaperList
+//   "viewButton": "عرض PDF",
+//   "viewActionLabel": "عرض PDF لـ {title}",
+    
