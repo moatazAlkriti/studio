@@ -14,8 +14,8 @@ import type { StoredPaper } from "./paper-list"; // Import shared type
 
 // Fallback dummy data (only used if localStorage is empty/invalid)
 const initialDummyPapers: StoredPaper[] = [
-  { id: 'dummy-1', title: "Example Paper One", authors: "Author A, Author B", uploadDate: "2023-01-15T10:00:00Z", abstract: "This is a sample abstract for an example paper stored locally...", fileName: "example1.pdf", fileType: "application/pdf", fileSize: 1024*500, fileDataUrl: "" },
-  { id: 'dummy-2', title: "Another Example Paper", authors: "Author C", uploadDate: "2022-11-20T14:30:00Z", abstract: "Abstract for the second example paper...", fileName: "example2.pdf", fileType: "application/pdf", fileSize: 1024*800, fileDataUrl: "" },
+  { id: 'dummy-1', title: "Example Paper One", authors: "Author A, Author B", subject: "AI", department: "Computer Science", uploadDate: "2023-01-15T10:00:00Z", abstract: "This is a sample abstract for an example paper stored locally...", fileName: "example1.pdf", fileType: "application/pdf", fileSize: 1024*500, fileDataUrl: "" },
+  { id: 'dummy-2', title: "Another Example Paper", authors: "Author C", subject: "Genetics", department: "Biology", uploadDate: "2022-11-20T14:30:00Z", abstract: "Abstract for the second example paper...", fileName: "example2.pdf", fileType: "application/pdf", fileSize: 1024*800, fileDataUrl: "" },
 ];
 
 
@@ -73,11 +73,14 @@ export function FavoritesList() {
       setAllPapers(initialDummyPapers); // Fallback on error
       setFavoritePapers([]);
       setFavoritePaperIds(new Set());
-      toast({
-          variant: "destructive",
-          title: tPaperList('localStorageErrorTitle'),
-          description: "Could not load favorites."
-      })
+      // Wrap toast call in setTimeout
+      setTimeout(() => {
+          toast({
+              variant: "destructive",
+              title: tPaperList('localStorageErrorTitle'),
+              description: "Could not load favorites."
+          })
+      }, 0);
     } finally {
       setIsLoading(false);
     }
@@ -93,11 +96,14 @@ export function FavoritesList() {
               setFavoritePapers(allPapers.filter(p => favoritePaperIds.has(p.id)));
           } catch (error) {
               console.error("Error writing favorites to localStorage:", error);
-              toast({
-                  variant: "destructive",
-                  title: tPaperList('toggleFavoriteErrorTitle'),
-                  description: tPaperList('localStorageWriteErrorDescription')
-              });
+              // Wrap toast call in setTimeout
+              setTimeout(() => {
+                  toast({
+                      variant: "destructive",
+                      title: tPaperList('toggleFavoriteErrorTitle'),
+                      description: tPaperList('localStorageWriteErrorDescription')
+                  });
+              }, 0);
           }
       }
       // Removed `toast` and `tPaperList` from dependencies as they are stable
@@ -110,19 +116,25 @@ export function FavoritesList() {
           // No need to filter papers here, the useEffect above will handle it
           return newIds;
       });
-       toast({
-          title: tPaperList('unlikedToastTitle'),
-          description: tPaperList('unlikedToastDescription', { title: paperTitle }),
-      });
+       // Wrap toast call in setTimeout
+       setTimeout(() => {
+           toast({
+              title: tPaperList('unlikedToastTitle'),
+              description: tPaperList('unlikedToastDescription', { title: paperTitle }),
+          });
+       }, 0);
   };
 
    const handleDownloadPaper = (paper: Paper) => {
      if (!paper.fileDataUrl) {
-       toast({
-         variant: "destructive",
-         title: tPaperList('viewErrorTitle'),
-         description: tPaperList('viewErrorNoData'),
-       });
+       // Wrap toast call in setTimeout
+       setTimeout(() => {
+           toast({
+             variant: "destructive",
+             title: tPaperList('viewErrorTitle'),
+             description: tPaperList('viewErrorNoData'),
+           });
+       }, 0);
        return;
      }
      const link = document.createElement('a');
@@ -131,10 +143,13 @@ export function FavoritesList() {
      document.body.appendChild(link);
      link.click();
      document.body.removeChild(link);
-     toast({
-       title: tPaperList('downloadStartedTitle'),
-       description: tPaperList('downloadStartedDescription', { fileName: paper.fileName }),
-     });
+     // Wrap toast call in setTimeout
+     setTimeout(() => {
+         toast({
+           title: tPaperList('downloadStartedTitle'),
+           description: tPaperList('downloadStartedDescription', { fileName: paper.fileName }),
+         });
+     }, 0);
    };
 
   const formatDate = (dateString: string | undefined) => {
@@ -161,6 +176,7 @@ export function FavoritesList() {
                      <Skeleton className="h-5 w-3/4 mb-2" />
                      <Skeleton className="h-4 w-1/2" />
                      <Skeleton className="h-4 w-1/4 mt-1" />
+                     <Skeleton className="h-3 w-3/5 mt-1" /> {/* Skeleton for subject/dept */}
                    </CardHeader>
                    <CardContent>
                      <Skeleton className="h-4 w-full mb-1" />
@@ -196,6 +212,7 @@ export function FavoritesList() {
                         <Skeleton className="h-5 w-3/4 mb-2" />
                         <Skeleton className="h-4 w-1/2" />
                         <Skeleton className="h-4 w-1/4 mt-1" />
+                        <Skeleton className="h-3 w-3/5 mt-1" /> {/* Skeleton for subject/dept */}
                     </CardHeader>
                     <CardContent>
                         <Skeleton className="h-4 w-full mb-1" />
@@ -219,6 +236,8 @@ export function FavoritesList() {
                   </CardTitle>
                   <CardDescription>
                      {tPaperList('paperByAuthors', { authors: paper.authors })} | {tPaperList('uploadedOn', { date: formatDate(paper.uploadDate) })}
+                     <br/> {/* Added line break */}
+                     <span className="text-xs">{tPaperList('subject')}: {paper.subject} | {tPaperList('department')}: {paper.department}</span> {/* Display subject and department */}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

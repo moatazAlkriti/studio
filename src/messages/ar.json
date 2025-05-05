@@ -1,3 +1,4 @@
+
 {
   "LoginPage": {
     "title": "تسجيل الدخول",
@@ -69,6 +70,12 @@
     "authorsPlaceholder": "مثال: جون دو، جين سميث",
     "authorsDescription": "قائمة المؤلفين مفصولة بفواصل.",
     "authorsError": "يجب أن يكون اسم المؤلفين مكونًا من حرفين على الأقل.",
+    "subjectLabel": "الموضوع",
+    "subjectPlaceholder": "أدخل موضوع البحث",
+    "subjectError": "يجب أن يكون الموضوع مكونًا من حرفين على الأقل.",
+    "departmentLabel": "القسم",
+    "departmentPlaceholder": "أدخل القسم المعني",
+    "departmentError": "يجب أن يكون القسم مكونًا من حرفين على الأقل.",
     "abstractLabel": "الملخص",
     "abstractPlaceholder": "أدخل ملخص الورقة",
     "abstractError": "يجب أن يكون الملخص مكونًا من 10 أحرف على الأقل.",

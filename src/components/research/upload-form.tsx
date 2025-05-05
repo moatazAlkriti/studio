@@ -35,6 +35,12 @@ const getFormSchema = (t: ReturnType<typeof useTranslations<'UploadForm'>>) => z
   authors: z.string().min(2, {
     message: t('authorsError'),
   }).describe(t('authorsDescription')), // Adding description for potential tooltips or hints
+  subject: z.string().min(2, { // Added subject field
+    message: t('subjectError'),
+  }),
+  department: z.string().min(2, { // Added department field
+    message: t('departmentError'),
+  }),
   abstract: z.string().min(10, {
     message: t('abstractError'),
   }),
@@ -53,6 +59,8 @@ export interface StoredPaper {
     id: string;
     title: string;
     authors: string;
+    subject: string; // Added subject
+    department: string; // Added department
     abstract: string;
     fileName: string;
     fileType: string;
@@ -85,6 +93,8 @@ export function UploadForm() {
     defaultValues: {
       title: "",
       authors: "",
+      subject: "", // Added default
+      department: "", // Added default
       abstract: "",
       file: undefined,
     },
@@ -121,6 +131,8 @@ export function UploadForm() {
             id: `paper-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`, // More unique ID
             title: values.title,
             authors: values.authors,
+            subject: values.subject, // Added subject
+            department: values.department, // Added department
             abstract: values.abstract,
             fileName: file.name,
             fileType: file.type,
@@ -217,6 +229,32 @@ export function UploadForm() {
                 </FormItem>
               )}
             />
+             <FormField // Added Subject field
+              control={form.control}
+              name="subject"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('subjectLabel')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('subjectPlaceholder')} {...field} disabled={isUploading}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField // Added Department field
+              control={form.control}
+              name="department"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('departmentLabel')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('departmentPlaceholder')} {...field} disabled={isUploading}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="abstract"
@@ -296,3 +334,4 @@ export function UploadForm() {
 // ar.json -> Notifications:
 //   "newPaperUploadMessage": "تم رفع ورقة بحثية جديدة بعنوان \"{title}\" بواسطة {username}.",
 //   "unknownUser": "مستخدم غير معروف"
+

@@ -36,8 +36,8 @@ const getSearchSchema = (t: ReturnType<typeof useTranslations<'SearchSection'>>)
 
 // Fallback dummy data (only used if localStorage is empty/invalid on first load)
 const initialDummyPapers: StoredPaper[] = [
-  { id: 'dummy-1', title: "Example Paper One", authors: "Author A, Author B", uploadDate: "2023-01-15T10:00:00Z", abstract: "This is a sample abstract for an example paper stored locally...", fileName: "example1.pdf", fileType: "application/pdf", fileSize: 1024*500, fileDataUrl: "" },
-  { id: 'dummy-2', title: "Another Example Paper", authors: "Author C", uploadDate: "2022-11-20T14:30:00Z", abstract: "Abstract for the second example paper...", fileName: "example2.pdf", fileType: "application/pdf", fileSize: 1024*800, fileDataUrl: "" },
+  { id: 'dummy-1', title: "Example Paper One", authors: "Author A, Author B", subject: "AI", department: "Computer Science", uploadDate: "2023-01-15T10:00:00Z", abstract: "This is a sample abstract for an example paper stored locally...", fileName: "example1.pdf", fileType: "application/pdf", fileSize: 1024*500, fileDataUrl: "" },
+  { id: 'dummy-2', title: "Another Example Paper", authors: "Author C", subject: "Genetics", department: "Biology", uploadDate: "2022-11-20T14:30:00Z", abstract: "Abstract for the second example paper...", fileName: "example2.pdf", fileType: "application/pdf", fileSize: 1024*800, fileDataUrl: "" },
 ];
 
 
@@ -114,11 +114,14 @@ export function SearchSection() {
                localStorage.setItem('researchHubFavorites', JSON.stringify(Array.from(favoritePaperIds)));
            } catch (error) {
                console.error("Error writing favorites to localStorage:", error);
-               toast({
-                   variant: "destructive",
-                   title: t('toggleFavoriteErrorTitle'),
-                   description: tPaperList('localStorageWriteErrorDescription') // Reuse translation
-               });
+               // Wrap toast call in setTimeout
+               setTimeout(() => {
+                   toast({
+                       variant: "destructive",
+                       title: t('toggleFavoriteErrorTitle'),
+                       description: tPaperList('localStorageWriteErrorDescription') // Reuse translation
+                   });
+               }, 0);
            }
        }
        // Removed `t`, `tPaperList`, and `toast` from dependencies as they are stable
@@ -150,11 +153,14 @@ export function SearchSection() {
 
    const handleDownloadPaper = (paper: SearchResult) => {
      if (!paper.fileDataUrl) {
-       toast({
-         variant: "destructive",
-         title: tPaperList('viewErrorTitle'),
-         description: tPaperList('viewErrorNoData'),
-       });
+       // Wrap toast call in setTimeout
+       setTimeout(() => {
+           toast({
+             variant: "destructive",
+             title: tPaperList('viewErrorTitle'),
+             description: tPaperList('viewErrorNoData'),
+           });
+       }, 0);
        return;
      }
 
@@ -165,10 +171,13 @@ export function SearchSection() {
      link.click();
      document.body.removeChild(link);
 
-     toast({
-       title: tPaperList('downloadStartedTitle'),
-       description: tPaperList('downloadStartedDescription', { fileName: paper.fileName }),
-     });
+     // Wrap toast call in setTimeout
+     setTimeout(() => {
+         toast({
+           title: tPaperList('downloadStartedTitle'),
+           description: tPaperList('downloadStartedDescription', { fileName: paper.fileName }),
+         });
+     }, 0);
    };
 
    const toggleFavorite = (paperId: string, paperTitle: string) => {
@@ -176,16 +185,22 @@ export function SearchSection() {
            const newIds = new Set(prevIds);
            if (newIds.has(paperId)) {
                newIds.delete(paperId);
-               toast({
-                   title: t('unlikedToastTitle'),
-                   description: t('unlikedToastDescription', { title: paperTitle }),
-               });
+               // Wrap toast call in setTimeout
+               setTimeout(() => {
+                   toast({
+                       title: t('unlikedToastTitle'),
+                       description: t('unlikedToastDescription', { title: paperTitle }),
+                   });
+               }, 0);
            } else {
                newIds.add(paperId);
-               toast({
-                   title: t('likedToastTitle'),
-                   description: t('likedToastDescription', { title: paperTitle }),
-               });
+               // Wrap toast call in setTimeout
+               setTimeout(() => {
+                   toast({
+                       title: t('likedToastTitle'),
+                       description: t('likedToastDescription', { title: paperTitle }),
+                   });
+               }, 0);
            }
            return newIds;
        });
@@ -278,6 +293,8 @@ export function SearchSection() {
                      </CardTitle>
                      <CardDescription>
                        {tPaperList('paperByAuthors', { authors: result.authors })} | {tPaperList('uploadedOn', { date: formatDate(result.uploadDate) })}
+                       <br/> {/* Added line break */}
+                       <span className="text-xs">{tPaperList('subject')}: {result.subject} | {tPaperList('department')}: {result.department}</span> {/* Display subject and department */}
                      </CardDescription>
                    </CardHeader>
                    <CardContent>
