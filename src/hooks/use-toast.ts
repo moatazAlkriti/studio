@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -136,7 +137,10 @@ let memoryState: State = { toasts: [] }
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
-    listener(memoryState)
+    // Wrap listener call in setTimeout to defer update
+    setTimeout(() => {
+      listener(memoryState);
+    }, 0);
   })
 }
 
@@ -192,3 +196,4 @@ function useToast() {
 }
 
 export { useToast, toast }
+

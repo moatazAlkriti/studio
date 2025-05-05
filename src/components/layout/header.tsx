@@ -95,8 +95,11 @@ export function Header() {
 
     // --- Add Event Listener for Real-time Updates ---
     const handleNewNotification = () => {
-      // console.log('New notification event received, reloading notifications.');
-      loadNotifications();
+      // Wrap in setTimeout to defer the state update slightly,
+      // potentially avoiding updates during another component's render.
+      setTimeout(() => {
+        loadNotifications();
+      }, 0);
     };
 
     window.addEventListener('new-notification', handleNewNotification);
@@ -326,3 +329,4 @@ export function Header() {
 //   "unreadIndicatorLabel": "إشعارات غير مقروءة",
 //   "errorTitle": "خطأ في الإشعار",
 //   "errorMarkRead": "تعذر تحديث حالة الإشعار."
+
