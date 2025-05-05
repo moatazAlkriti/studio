@@ -15,13 +15,22 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Search, FileText, Download, Loader2, Heart } from "lucide-react" // Added Heart icon
+import { Search, FileText, Download, Loader2, Heart, X } from "lucide-react" // Added X for dialog close
 import { useState, useEffect } from "react"
 import { Separator } from "@/components/ui/separator"
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast" // Import useToast
 import { format } from 'date-fns'; // For formatting date
 import type { StoredPaper } from "./paper-list"; // Import shared type
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+  DialogTrigger, // Import DialogTrigger if needed, or manage open state manually
+} from "@/components/ui/dialog"; // Import Dialog components
 
 // Schema generation function
 const getSearchSchema = (t: ReturnType<typeof useTranslations<'SearchSection'>>) => z.object({
@@ -46,12 +55,16 @@ type SearchResult = StoredPaper;
 export function SearchSection() {
   const t = useTranslations('SearchSection');
   const tPaperList = useTranslations('PaperList'); // For shared translations
+  const tDialog = useTranslations('PaperDetailsDialog'); // Translations for the details dialog
   const { toast } = useToast();
   const [allPapers, setAllPapers] = useState<StoredPaper[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingPapers, setIsLoadingPapers] = useState(true); // State for loading papers initially
   const [favoritePaperIds, setFavoritePaperIds] = useState<Set<string>>(new Set()); // State for favorite paper IDs
+  const [selectedPaper, setSelectedPaper] = useState<SearchResult | null>(null); // State for the paper selected for details view
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false); // State for dialog visibility
+
 
   // Create schema with translations
   const searchSchema = getSearchSchema(t);
@@ -210,127 +223,250 @@ export function SearchSection() {
    const formatDate = (dateString: string | undefined) => {
        if (!dateString) return tPaperList('unknownDate');
        try {
-           return format(new Date(dateString), 'PPP');
+           return format(new Date(dateString), 'PPP p'); // Include time
        } catch (e) {
            return tPaperList('invalidDate');
        }
    }
 
+   // Function to handle opening the details dialog
+   const handleShowDetails = (paper: SearchResult) => {
+       setSelectedPaper(paper);
+       setIsDetailsDialogOpen(true);
+   };
+
+   // Function to handle closing the details dialog
+   const handleCloseDetails = () => {
+       setIsDetailsDialogOpen(false);
+       setSelectedPaper(null); // Clear selected paper when closing
+   };
+
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
-        <CardDescription>{t('description')}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('titleLabel')}</FormLabel>
-                    <FormControl>
-                      <Input placeholder={t('titlePlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="author"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('authorLabel')}</FormLabel>
-                    <FormControl>
-                      <Input placeholder={t('authorPlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('yearLabel')}</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder={t('yearPlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('titleLabel')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={t('titlePlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="author"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('authorLabel')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={t('authorPlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('yearLabel')}</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder={t('yearPlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <Button type="submit" disabled={isLoadingPapers || isSearching} className="w-full md:w-auto">
+                {(isLoadingPapers || isSearching) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+                {isLoadingPapers ? t('loadingPapersButton') : (isSearching ? t('searchingButton') : t('searchButton'))}
+              </Button>
+            </form>
+          </Form>
+
+          <Separator className="my-8" />
+
+          <h3 className="text-lg font-semibold mb-4">{t('resultsTitle')}</h3>
+          {isLoadingPapers ? (
+             <p className="text-muted-foreground flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('loadingPapersText')}</p>
+          ) : isSearching ? (
+            <p className="text-muted-foreground flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('searchingText')}</p>
+          ) : searchResults.length > 0 ? (
+            <div className="space-y-4">
+              {searchResults.map((result) => {
+                 const isFavorite = favoritePaperIds.has(result.id);
+                 return (
+                   <Card
+                     key={result.id}
+                     className="cursor-pointer transition-shadow duration-300 hover:shadow-md"
+                     onClick={() => handleShowDetails(result)} // Make card clickable
+                     aria-label={t('viewDetailsAriaLabel', { title: result.title })} // Accessibility
+                   >
+                     <CardHeader>
+                       <CardTitle className="text-base flex items-center">
+                         <FileText className="mr-2 h-5 w-5 text-primary" />
+                         {result.title}
+                       </CardTitle>
+                       <CardDescription>
+                         {tPaperList('paperByAuthors', { authors: result.authors })} | {tPaperList('uploadedOn', { date: formatDate(result.uploadDate) })}
+                         <br/> {/* Added line break */}
+                         <span className="text-xs">{tPaperList('subject')}: {result.subject} | {tPaperList('department')}: {result.department}</span> {/* Display subject and department */}
+                       </CardDescription>
+                     </CardHeader>
+                     <CardContent>
+                       <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{result.abstract}</p>
+                       {/* Keep action buttons inside the card, but stop propagation so they don't trigger card click */}
+                       <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => handleDownloadPaper(result)}
+                           disabled={!result.fileDataUrl}
+                           className="transition-colors duration-200 hover:bg-primary/10"
+                           aria-label={tPaperList('downloadActionLabel', { title: result.title })}
+                         >
+                           <Download className="mr-1 h-4 w-4" />
+                           {tPaperList('downloadButton')}
+                         </Button>
+
+                         <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toggleFavorite(result.id, result.title)}
+                            aria-label={isFavorite ? t('unlikeActionLabel', {title: result.title}) : t('likeActionLabel', {title: result.title})}
+                            className={`transition-colors duration-200 ${isFavorite ? 'text-destructive hover:bg-destructive/10' : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'}`}
+                         >
+                            <Heart className={`h-5 w-5 ${isFavorite ? 'fill-destructive' : 'fill-none'}`} />
+                         </Button>
+                       </div>
+                     </CardContent>
+                   </Card>
+                 );
+               })}
             </div>
-            <Button type="submit" disabled={isLoadingPapers || isSearching} className="w-full md:w-auto">
-              {(isLoadingPapers || isSearching) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-              {isLoadingPapers ? t('loadingPapersButton') : (isSearching ? t('searchingButton') : t('searchButton'))}
-            </Button>
-          </form>
-        </Form>
+          ) : (
+            <p className="text-muted-foreground">{t('noResultsText')}</p>
+          )}
+        </CardContent>
+      </Card>
 
-        <Separator className="my-8" />
+      {/* Paper Details Dialog */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={handleCloseDetails}>
+        <DialogContent className="sm:max-w-lg md:max-w-xl lg:max-w-2xl"> {/* Adjust width */}
+          {selectedPaper && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedPaper.title}</DialogTitle>
+                <DialogDescription>
+                  {tDialog('detailsFor')} "{selectedPaper.title}"
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4 space-y-4">
+                 <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                    <strong className="col-span-1 text-muted-foreground">{tDialog('authorsLabel')}</strong>
+                    <span className="col-span-2">{selectedPaper.authors}</span>
 
-        <h3 className="text-lg font-semibold mb-4">{t('resultsTitle')}</h3>
-        {isLoadingPapers ? (
-           <p className="text-muted-foreground flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('loadingPapersText')}</p>
-        ) : isSearching ? (
-          <p className="text-muted-foreground flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('searchingText')}</p>
-        ) : searchResults.length > 0 ? (
-          <div className="space-y-4">
-            {searchResults.map((result) => {
-               const isFavorite = favoritePaperIds.has(result.id);
-               return (
-                 <Card key={result.id}>
-                   <CardHeader>
-                     <CardTitle className="text-base flex items-center">
-                       <FileText className="mr-2 h-5 w-5 text-primary" />
-                       {result.title}
-                     </CardTitle>
-                     <CardDescription>
-                       {tPaperList('paperByAuthors', { authors: result.authors })} | {tPaperList('uploadedOn', { date: formatDate(result.uploadDate) })}
-                       <br/> {/* Added line break */}
-                       <span className="text-xs">{tPaperList('subject')}: {result.subject} | {tPaperList('department')}: {result.department}</span> {/* Display subject and department */}
-                     </CardDescription>
-                   </CardHeader>
-                   <CardContent>
-                     <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{result.abstract}</p>
-                     <div className="flex items-center justify-between">
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => handleDownloadPaper(result)}
-                         disabled={!result.fileDataUrl}
-                         className="transition-colors duration-200 hover:bg-primary/10"
-                         aria-label={tPaperList('downloadActionLabel', { title: result.title })}
-                       >
-                         <Download className="mr-1 h-4 w-4" />
-                         {tPaperList('downloadButton')}
-                       </Button>
+                    <strong className="col-span-1 text-muted-foreground">{tDialog('subjectLabel')}</strong>
+                    <span className="col-span-2">{selectedPaper.subject}</span>
 
-                       <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleFavorite(result.id, result.title)}
-                          aria-label={isFavorite ? t('unlikeActionLabel', {title: result.title}) : t('likeActionLabel', {title: result.title})}
-                          className={`transition-colors duration-200 ${isFavorite ? 'text-destructive hover:bg-destructive/10' : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'}`}
-                       >
-                          <Heart className={`h-5 w-5 ${isFavorite ? 'fill-destructive' : 'fill-none'}`} />
-                       </Button>
-                     </div>
-                   </CardContent>
-                 </Card>
-               );
-             })}
-          </div>
-        ) : (
-          <p className="text-muted-foreground">{t('noResultsText')}</p>
-        )}
-      </CardContent>
-    </Card>
+                    <strong className="col-span-1 text-muted-foreground">{tDialog('departmentLabel')}</strong>
+                    <span className="col-span-2">{selectedPaper.department}</span>
+
+                    <strong className="col-span-1 text-muted-foreground">{tDialog('uploadDateLabel')}</strong>
+                    <span className="col-span-2">{formatDate(selectedPaper.uploadDate)}</span>
+
+                    <strong className="col-span-1 text-muted-foreground">{tDialog('fileNameLabel')}</strong>
+                    <span className="col-span-2 break-all">{selectedPaper.fileName}</span>
+
+                    <strong className="col-span-1 text-muted-foreground">{tDialog('fileSizeLabel')}</strong>
+                    <span className="col-span-2">{(selectedPaper.fileSize / (1024 * 1024)).toFixed(2)} MB</span>
+                 </div>
+
+                 <Separator />
+
+                 <div>
+                    <strong className="block text-sm font-medium mb-1 text-muted-foreground">{tDialog('abstractLabel')}</strong>
+                    <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md max-h-48 overflow-y-auto">
+                        {selectedPaper.abstract}
+                    </p>
+                 </div>
+
+              </div>
+              {/* Optional Footer with actions like Download */}
+              <div className="flex justify-end space-x-2 mt-4">
+                 <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownloadPaper(selectedPaper)}
+                    disabled={!selectedPaper.fileDataUrl}
+                    className="transition-colors duration-200 hover:bg-primary/10"
+                    >
+                    <Download className="mr-1 h-4 w-4" />
+                    {tPaperList('downloadButton')}
+                 </Button>
+                 <DialogClose asChild>
+                     <Button type="button" variant="secondary">
+                        {tDialog('closeButton')}
+                     </Button>
+                 </DialogClose>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
+
+// Add needed translations to JSON files:
+// en.json
+// "SearchSection": {
+//   ...
+//   "viewDetailsAriaLabel": "View details for {title}"
+// },
+// "PaperDetailsDialog": {
+//   "detailsFor": "Details for",
+//   "authorsLabel": "Authors:",
+//   "subjectLabel": "Subject:",
+//   "departmentLabel": "Department:",
+//   "uploadDateLabel": "Uploaded On:",
+//   "fileNameLabel": "Filename:",
+//   "fileSizeLabel": "Size:",
+//   "abstractLabel": "Abstract:",
+//   "closeButton": "Close"
+// }
+
+// ar.json
+// "SearchSection": {
+//   ...
+//   "viewDetailsAriaLabel": "عرض تفاصيل {title}"
+// },
+// "PaperDetailsDialog": {
+//   "detailsFor": "تفاصيل",
+//   "authorsLabel": "المؤلفون:",
+//   "subjectLabel": "الموضوع:",
+//   "departmentLabel": "القسم:",
+//   "uploadDateLabel": "تاريخ الرفع:",
+//   "fileNameLabel": "اسم الملف:",
+//   "fileSizeLabel": "الحجم:",
+//   "abstractLabel": "الملخص:",
+//   "closeButton": "إغلاق"
+// }
+
+    

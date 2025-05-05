@@ -58,12 +58,13 @@
     "likedToastDescription": "\"{title}\" added to your favorites.",
     "unlikedToastTitle": "Removed from Favorites",
     "unlikedToastDescription": "\"{title}\" removed from your favorites.",
-    "toggleFavoriteErrorTitle": "Error Updating Favorites"
+    "toggleFavoriteErrorTitle": "Error Updating Favorites",
+    "viewDetailsAriaLabel": "View details for {title}"
   },
   "UploadForm": {
     "title": "Upload Research Paper",
     "description": "Fill in the details and upload your research paper (PDF only).",
-    "paperTitleLabel": "Title",
+    "paperTitleLabel": "Research paper title",
     "paperTitlePlaceholder": "Enter the paper title",
     "paperTitleError": "Title must be at least 2 characters.",
     "authorsLabel": "Authors",
@@ -256,5 +257,18 @@
       "errorTitle": "Notification Error",
       "errorMarkRead": "Could not update notification status.",
       "unknownUser": "an unknown user"
-   }
+   },
+   "PaperDetailsDialog": {
+    "detailsFor": "Details for",
+    "authorsLabel": "Authors:",
+    "subjectLabel": "Subject:",
+    "departmentLabel": "Department:",
+    "uploadDateLabel": "Uploaded On:",
+    "fileNameLabel": "Filename:",
+    "fileSizeLabel": "Size:",
+    "abstractLabel": "Abstract:",
+    "closeButton": "Close"
+  }
 }
+
+    

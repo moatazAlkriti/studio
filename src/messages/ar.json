@@ -58,12 +58,13 @@
     "likedToastDescription": "تمت إضافة \"{title}\" إلى مفضلتك.",
     "unlikedToastTitle": "تمت الإزالة من المفضلة",
     "unlikedToastDescription": "تمت إزالة \"{title}\" من مفضلتك.",
-    "toggleFavoriteErrorTitle": "خطأ في تحديث المفضلة"
+    "toggleFavoriteErrorTitle": "خطأ في تحديث المفضلة",
+    "viewDetailsAriaLabel": "عرض تفاصيل {title}"
   },
   "UploadForm": {
     "title": "رفع ورقة بحثية",
     "description": "املأ التفاصيل وقم برفع ورقتك البحثية (PDF فقط).",
-    "paperTitleLabel": "العنوان",
+    "paperTitleLabel": "عنوان الورقة البحثية",
     "paperTitlePlaceholder": "أدخل عنوان الورقة",
     "paperTitleError": "يجب أن يكون العنوان مكونًا من حرفين على الأقل.",
     "authorsLabel": "المؤلفون",
@@ -256,5 +257,18 @@
      "errorTitle": "خطأ في الإشعار",
      "errorMarkRead": "تعذر تحديث حالة الإشعار.",
      "unknownUser": "مستخدم غير معروف"
+  },
+   "PaperDetailsDialog": {
+    "detailsFor": "تفاصيل",
+    "authorsLabel": "المؤلفون:",
+    "subjectLabel": "الموضوع:",
+    "departmentLabel": "القسم:",
+    "uploadDateLabel": "تاريخ الرفع:",
+    "fileNameLabel": "اسم الملف:",
+    "fileSizeLabel": "الحجم:",
+    "abstractLabel": "الملخص:",
+    "closeButton": "إغلاق"
   }
 }
+
+    
