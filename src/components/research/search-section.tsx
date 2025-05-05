@@ -23,7 +23,7 @@ import { format } from 'date-fns'; // For formatting date
 
 // Schema generation function
 const getSearchSchema = (t: ReturnType<typeof useTranslations<'SearchSection'>>) => z.object({
-  keywords: z.string().optional(),
+  title: z.string().optional(), // Changed from keywords to title
   author: z.string().optional(),
   // Keep year validation if needed, though upload date is now available
   year: z.string().optional().refine((val) => !val || /^\d{4}$/.test(val), {
@@ -68,7 +68,7 @@ export function SearchSection() {
   const form = useForm<z.infer<typeof searchSchema>>({
     resolver: zodResolver(searchSchema),
     defaultValues: {
-      keywords: "",
+      title: "", // Changed from keywords
       author: "",
       year: "", // Keep year field if you want to filter by it, though upload date is primary
     },
@@ -106,16 +106,16 @@ export function SearchSection() {
     setTimeout(() => {
       // Filter loaded papers based on search criteria
       const results = allPapers.filter(paper => {
-        const keywordMatch = !values.keywords ||
-                             paper.title.toLowerCase().includes(values.keywords.toLowerCase()) ||
-                             paper.abstract.toLowerCase().includes(values.keywords.toLowerCase());
+        const titleMatch = !values.title || // Changed from keywordsMatch
+                             paper.title.toLowerCase().includes(values.title.toLowerCase()) ||
+                             paper.abstract.toLowerCase().includes(values.title.toLowerCase()); // Also search abstract with title input
         const authorMatch = !values.author ||
                             paper.authors.toLowerCase().includes(values.author.toLowerCase());
         // Optional: Filter by year if the field is used. Compare extracted year from uploadDate.
         const yearMatch = !values.year ||
                           (paper.uploadDate && new Date(paper.uploadDate).getFullYear().toString() === values.year);
 
-        return keywordMatch && authorMatch && yearMatch;
+        return titleMatch && authorMatch && yearMatch; // Changed from keywordMatch
       });
       setSearchResults(results);
       setIsSearching(false);
@@ -167,12 +167,12 @@ export function SearchSection() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
-                name="keywords"
+                name="title" // Changed from keywords
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('keywordsLabel')}</FormLabel>
+                    <FormLabel>{t('titleLabel')}</FormLabel> {/* Changed from keywordsLabel */}
                     <FormControl>
-                      <Input placeholder={t('keywordsPlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/>
+                      <Input placeholder={t('titlePlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/> {/* Changed from keywordsPlaceholder */}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -258,11 +258,3 @@ export function SearchSection() {
     </Card>
   )
 }
-
-// Add missing translations to your JSON files:
-// en.json -> SearchSection:
-//   "loadingPapersButton": "Loading Papers...",
-//   "loadingPapersText": "Loading available papers...",
-// ar.json -> SearchSection:
-//   "loadingPapersButton": "جار تحميل الأوراق...",
-//   "loadingPapersText": "جار تحميل الأوراق المتاحة...",

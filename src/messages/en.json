@@ -1,4 +1,3 @@
-
 {
   "LoginPage": {
     "title": "Login",
@@ -34,9 +33,9 @@
   },
   "SearchSection": {
     "title": "Search Research Papers",
-    "description": "Find papers by keywords, author, or publication year.",
-    "keywordsLabel": "Keywords",
-    "keywordsPlaceholder": "e.g., machine learning, climate change",
+    "description": "Find papers by title, author, or publication year.",
+    "titleLabel": "Research paper title",
+    "titlePlaceholder": "e.g., Intro to Machine Learning",
     "authorLabel": "Author",
     "authorPlaceholder": "e.g., John Doe",
     "yearLabel": "Publication Year",
