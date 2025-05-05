@@ -170,9 +170,9 @@ export function SearchSection() {
                 name="title" // Changed from keywords
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('titleLabel')}</FormLabel> {/* Changed from keywordsLabel */}
+                    <FormLabel>{t('titleLabel')}</FormLabel> {/* Changed label */}
                     <FormControl>
-                      <Input placeholder={t('titlePlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/> {/* Changed from keywordsPlaceholder */}
+                      <Input placeholder={t('titlePlaceholder')} {...field} disabled={isLoadingPapers || isSearching}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
