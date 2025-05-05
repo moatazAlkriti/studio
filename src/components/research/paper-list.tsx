@@ -265,18 +265,59 @@ export function PaperList() {
    };
 
    const handleViewPaper = (paper: Paper) => {
-    if (!paper.fileDataUrl) {
-      setTimeout(() => {
-        toast({
-          variant: "destructive",
-          title: t('viewErrorTitle'),
-          description: t('viewErrorNoData'),
-        });
-      }, 0);
-      return;
-    }
-    // Open the data URL in a new tab
-    window.open(paper.fileDataUrl, '_blank');
+       if (!paper.fileDataUrl) {
+           setTimeout(() => {
+               toast({
+                   variant: "destructive",
+                   title: t('viewErrorTitle'),
+                   description: t('viewErrorNoData'),
+               });
+           }, 0);
+           return;
+       }
+
+       try {
+           // Convert data URL to Blob
+           const byteString = atob(paper.fileDataUrl.split(',')[1]);
+           const mimeString = paper.fileDataUrl.split(',')[0].split(':')[1].split(';')[0];
+           const ab = new ArrayBuffer(byteString.length);
+           const ia = new Uint8Array(ab);
+           for (let i = 0; i < byteString.length; i++) {
+               ia[i] = byteString.charCodeAt(i);
+           }
+           const blob = new Blob([ab], { type: mimeString });
+
+           // Create a Blob URL
+           const blobUrl = URL.createObjectURL(blob);
+
+           // Open the Blob URL in a new tab
+           const newWindow = window.open(blobUrl, '_blank');
+
+           if (!newWindow) {
+                // Handle popup blocker
+                setTimeout(() => {
+                    toast({
+                        variant: "destructive",
+                        title: t('viewErrorTitle'),
+                        description: t('popupBlockedError'), // Add this translation
+                    });
+                }, 0);
+           } else {
+                // Revoke the Blob URL after a short delay to allow the browser to load it
+                // This is important for memory management
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+           }
+
+       } catch (error) {
+           console.error("Error creating or opening Blob URL:", error);
+           setTimeout(() => {
+               toast({
+                   variant: "destructive",
+                   title: t('viewErrorTitle'),
+                   description: t('viewErrorGeneric'), // Add this translation
+               });
+           }, 0);
+       }
    };
 
    const toggleFavorite = (paperId: string, paperTitle: string) => {
@@ -535,7 +576,10 @@ export function PaperList() {
 // en.json -> PaperList
 //   "viewButton": "View PDF",
 //   "viewActionLabel": "View PDF for {title}",
+//   "popupBlockedError": "Could not open PDF. Please disable your pop-up blocker for this site.",
+//   "viewErrorGeneric": "An unexpected error occurred while trying to view the PDF."
 // ar.json -> PaperList
 //   "viewButton": "عرض PDF",
 //   "viewActionLabel": "عرض PDF لـ {title}",
-    
+//   "popupBlockedError": "تعذر فتح ملف PDF. يرجى تعطيل مانع النوافذ المنبثقة لهذا الموقع.",
+//   "viewErrorGeneric": "حدث خطأ غير متوقع أثناء محاولة عرض ملف PDF."

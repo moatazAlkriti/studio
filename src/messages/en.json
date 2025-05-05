@@ -190,6 +190,8 @@
     "unlikeActionLabel": "Remove {title} from favorites",
     "viewErrorTitle": "Error Viewing Paper",
     "viewErrorNoData": "No file data available for this paper.",
+    "popupBlockedError": "Could not open PDF. Please disable your pop-up blocker for this site.",
+    "viewErrorGeneric": "An unexpected error occurred while trying to view the PDF.",
     "downloadStartedTitle": "Download Started",
     "downloadStartedDescription": "Your download for \"{fileName}\" has started.",
     "paperByAuthors": "By {authors}",
@@ -272,5 +274,3 @@
     "closeButton": "Close"
   }
 }
-
-    

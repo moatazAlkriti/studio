@@ -190,6 +190,8 @@
     "unlikeActionLabel": "إزالة {title} من المفضلة",
     "viewErrorTitle": "خطأ في عرض الورقة",
     "viewErrorNoData": "لا توجد بيانات ملف متاحة لهذه الورقة.",
+    "popupBlockedError": "تعذر فتح ملف PDF. يرجى تعطيل مانع النوافذ المنبثقة لهذا الموقع.",
+    "viewErrorGeneric": "حدث خطأ غير متوقع أثناء محاولة عرض ملف PDF.",
     "downloadStartedTitle": "بدأ التحميل",
     "downloadStartedDescription": "بدأ تحميل الملف \"{fileName}\".",
     "paperByAuthors": "بواسطة {authors}",
@@ -272,5 +274,3 @@
     "closeButton": "إغلاق"
   }
 }
-
-    
