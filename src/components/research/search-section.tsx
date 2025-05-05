@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Search, FileText, Download, Loader2, Heart, X } from "lucide-react" // Added X for dialog close
+import { Search, FileText, Download, Loader2, Heart, X, Eye } from "lucide-react" // Added X for dialog close, Added Eye icon
 import { useState, useEffect } from "react"
 import { Separator } from "@/components/ui/separator"
 import { useTranslations } from "next-intl";
@@ -193,6 +193,66 @@ export function SearchSection() {
      }, 0);
    };
 
+   // Add handleViewPaper function (copied from paper-list.tsx)
+   const handleViewPaper = (paper: SearchResult) => {
+       if (!paper.fileDataUrl) {
+           setTimeout(() => {
+               toast({
+                   variant: "destructive",
+                   title: tPaperList('viewErrorTitle'),
+                   description: tPaperList('viewErrorNoData'),
+               });
+           }, 0);
+           return;
+       }
+
+       try {
+           // Convert data URL to Blob
+           const byteString = atob(paper.fileDataUrl.split(',')[1]);
+           const mimeString = paper.fileDataUrl.split(',')[0].split(':')[1].split(';')[0];
+           const ab = new ArrayBuffer(byteString.length);
+           const ia = new Uint8Array(ab);
+           for (let i = 0; i < byteString.length; i++) {
+               ia[i] = byteString.charCodeAt(i);
+           }
+           const blob = new Blob([ab], { type: mimeString });
+
+           // Create a Blob URL
+           const blobUrl = URL.createObjectURL(blob);
+
+           // Open the Blob URL in a new tab
+           const newWindow = window.open(blobUrl, '_blank');
+
+           if (!newWindow) {
+                // Handle popup blocker
+                setTimeout(() => {
+                    toast({
+                        variant: "destructive",
+                        title: tPaperList('viewErrorTitle'),
+                        description: tPaperList('popupBlockedError'), // Add this translation
+                    });
+                }, 0);
+           } else {
+                // Revoke the Blob URL after a short delay to allow the browser to load it
+                // This is important for memory management
+                // No need to revoke immediately if using _blank, let the new tab manage it.
+                // Consider revoking on unload if needed.
+                // setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+           }
+
+       } catch (error) {
+           console.error("Error creating or opening Blob URL:", error);
+           setTimeout(() => {
+               toast({
+                   variant: "destructive",
+                   title: tPaperList('viewErrorTitle'),
+                   description: tPaperList('viewErrorGeneric'), // Add this translation
+               });
+           }, 0);
+       }
+   };
+
+
    const toggleFavorite = (paperId: string, paperTitle: string) => {
        setFavoritePaperIds(prevIds => {
            const newIds = new Set(prevIds);
@@ -332,18 +392,32 @@ export function SearchSection() {
                      <CardContent>
                        <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{result.abstract}</p>
                        {/* Keep action buttons inside the card, but stop propagation so they don't trigger card click */}
-                       <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => handleDownloadPaper(result)}
-                           disabled={!result.fileDataUrl}
-                           className="transition-colors duration-200 hover:bg-primary/10"
-                           aria-label={tPaperList('downloadActionLabel', { title: result.title })}
-                         >
-                           <Download className="mr-1 h-4 w-4" />
-                           {tPaperList('downloadButton')}
-                         </Button>
+                       <div className="flex items-center justify-between flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex space-x-2 flex-wrap gap-2">
+                              {/* Add View PDF button */}
+                              <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => handleViewPaper(result)}
+                                 disabled={!result.fileDataUrl}
+                                 className="transition-colors duration-200 hover:bg-secondary/80"
+                                 aria-label={tPaperList('viewActionLabel', { title: result.title })}
+                               >
+                                 <Eye className="mr-1 h-4 w-4" />
+                                 {tPaperList('viewButton')}
+                               </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadPaper(result)}
+                                disabled={!result.fileDataUrl}
+                                className="transition-colors duration-200 hover:bg-primary/10"
+                                aria-label={tPaperList('downloadActionLabel', { title: result.title })}
+                              >
+                                <Download className="mr-1 h-4 w-4" />
+                                {tPaperList('downloadButton')}
+                              </Button>
+                          </div>
 
                          <Button
                             variant="ghost"
@@ -410,6 +484,17 @@ export function SearchSection() {
               </div>
               {/* Optional Footer with actions like Download */}
               <div className="flex justify-end space-x-2 mt-4">
+                 {/* Add View PDF button also to the dialog */}
+                 <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewPaper(selectedPaper)}
+                    disabled={!selectedPaper.fileDataUrl}
+                    className="transition-colors duration-200 hover:bg-secondary/80"
+                 >
+                   <Eye className="mr-1 h-4 w-4" />
+                   {tPaperList('viewButton')}
+                 </Button>
                  <Button
                     variant="outline"
                     size="sm"
@@ -468,5 +553,3 @@ export function SearchSection() {
 //   "abstractLabel": "الملخص:",
 //   "closeButton": "إغلاق"
 // }
-
-    
