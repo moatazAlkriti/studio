@@ -29,7 +29,8 @@
   "HomePage": {
     "searchTab": "البحث عن الأوراق البحثية",
     "uploadTab": "رفع ورقة بحثية",
-    "viewTab": "عرض الأوراق البحثية"
+    "viewTab": "عرض الأوراق البحثية",
+    "favoritesTab": "المفضلة"
   },
   "SearchSection": {
     "title": "البحث عن الأوراق البحثية",
@@ -49,7 +50,14 @@
     "paperBy": "بواسطة {authors} ({year})",
     "viewPaperButton": "عرض الورقة",
     "loadingPapersButton": "جار تحميل الأوراق...",
-    "loadingPapersText": "جار تحميل الأوراق المتاحة..."
+    "loadingPapersText": "جار تحميل الأوراق المتاحة...",
+    "likeActionLabel": "إضافة {title} إلى المفضلة",
+    "unlikeActionLabel": "إزالة {title} من المفضلة",
+    "likedToastTitle": "تمت الإضافة إلى المفضلة",
+    "likedToastDescription": "تمت إضافة \"{title}\" إلى مفضلتك.",
+    "unlikedToastTitle": "تمت الإزالة من المفضلة",
+    "unlikedToastDescription": "تمت إزالة \"{title}\" من مفضلتك.",
+    "toggleFavoriteErrorTitle": "خطأ في تحديث المفضلة"
   },
   "UploadForm": {
     "title": "رفع ورقة بحثية",
@@ -168,6 +176,8 @@
     "editActionLabel": "تعديل الورقة {title}",
     "deleteActionLabel": "حذف الورقة {title}",
     "downloadActionLabel": "تحميل الورقة {title}",
+    "likeActionLabel": "إضافة {title} إلى المفضلة",
+    "unlikeActionLabel": "إزالة {title} من المفضلة",
     "viewErrorTitle": "خطأ في عرض الورقة",
     "viewErrorNoData": "لا توجد بيانات ملف متاحة لهذه الورقة.",
     "downloadStartedTitle": "بدأ التحميل",
@@ -178,7 +188,18 @@
     "invalidDate": "تاريخ غير صالح",
     "unknownPaperTitle": "هذه الورقة",
     "localStorageErrorTitle": "خطأ في التخزين",
-    "localStorageWriteErrorDescription": "تعذر حفظ التغييرات في التخزين المحلي."
+    "localStorageWriteErrorDescription": "تعذر حفظ التغييرات في التخزين المحلي.",
+    "likedToastTitle": "تمت الإضافة إلى المفضلة",
+    "likedToastDescription": "تمت إضافة \"{title}\" إلى مفضلتك.",
+    "unlikedToastTitle": "تمت الإزالة من المفضلة",
+    "unlikedToastDescription": "تمت إزالة \"{title}\" من مفضلتك.",
+    "toggleFavoriteErrorTitle": "خطأ في تحديث المفضلة"
+  },
+  "FavoritesList": {
+    "title": "الأوراق المفضلة",
+    "description": "مجموعتك من الأوراق البحثية المحفوظة.",
+    "noFavorites": "لم تقم بإضافة أي أوراق إلى مفضلتك بعد.",
+    "unlikeActionLabel": "إزالة {title} من المفضلة"
   },
   "EditPaperForm": {
     "dialogTitle": "تعديل تفاصيل الورقة",

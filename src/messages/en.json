@@ -29,7 +29,8 @@
   "HomePage": {
     "searchTab": "Search Papers",
     "uploadTab": "Upload Paper",
-    "viewTab": "View Papers"
+    "viewTab": "View Papers",
+    "favoritesTab": "Favorites"
   },
   "SearchSection": {
     "title": "Search Research Papers",
@@ -49,7 +50,14 @@
     "paperBy": "By {authors} ({year})",
     "viewPaperButton": "View Paper",
     "loadingPapersButton": "Loading Papers...",
-    "loadingPapersText": "Loading available papers..."
+    "loadingPapersText": "Loading available papers...",
+    "likeActionLabel": "Add {title} to favorites",
+    "unlikeActionLabel": "Remove {title} from favorites",
+    "likedToastTitle": "Added to Favorites",
+    "likedToastDescription": "\"{title}\" added to your favorites.",
+    "unlikedToastTitle": "Removed from Favorites",
+    "unlikedToastDescription": "\"{title}\" removed from your favorites.",
+    "toggleFavoriteErrorTitle": "Error Updating Favorites"
   },
   "UploadForm": {
     "title": "Upload Research Paper",
@@ -168,6 +176,8 @@
     "editActionLabel": "Edit paper {title}",
     "deleteActionLabel": "Delete paper {title}",
     "downloadActionLabel": "Download paper {title}",
+    "likeActionLabel": "Add {title} to favorites",
+    "unlikeActionLabel": "Remove {title} from favorites",
     "viewErrorTitle": "Error Viewing Paper",
     "viewErrorNoData": "No file data available for this paper.",
     "downloadStartedTitle": "Download Started",
@@ -178,7 +188,19 @@
     "invalidDate": "Invalid date",
     "unknownPaperTitle": "this paper",
     "localStorageErrorTitle": "Storage Error",
-    "localStorageWriteErrorDescription": "Could not save changes to local storage."
+    "localStorageWriteErrorDescription": "Could not save changes to local storage.",
+    "likedToastTitle": "Added to Favorites",
+    "likedToastDescription": "\"{title}\" added to your favorites.",
+    "unlikedToastTitle": "Removed from Favorites",
+    "unlikedToastDescription": "\"{title}\" removed from your favorites.",
+    "toggleFavoriteErrorTitle": "Error Updating Favorites"
+  },
+  "FavoritesList": {
+    "title": "Favorite Papers",
+    "description": "Your collection of saved research papers.",
+    "noFavorites": "You haven't added any papers to your favorites yet.",
+    "unlikeActionLabel": "Remove {title} from favorites"
+    // Other translations like download, date, etc., can be inherited or reused from PaperList/SearchSection if needed
   },
   "EditPaperForm": {
     "dialogTitle": "Edit Paper Details",

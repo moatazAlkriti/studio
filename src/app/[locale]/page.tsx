@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UploadForm } from "@/components/research/upload-form";
 import { SearchSection } from "@/components/research/search-section";
 import { PaperList } from "@/components/research/paper-list"; // Import the new component
+import { FavoritesList } from "@/components/research/favorites-list"; // Import FavoritesList
 import { LoginForm } from "@/components/auth/login-form";
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/navigation'; // Use navigation hook
@@ -39,9 +40,9 @@ export default function Home() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isLoggedInResearchHub');
       localStorage.removeItem('researchHubUsername');
+      // Optional: Consider clearing favorites on logout?
+      // localStorage.removeItem('researchHubFavorites');
     }
-    // Optional: Redirect to login or refresh the page if needed
-    // router.push(pathname); // Refresh current page to show login
     window.location.reload(); // Force reload to clear state and show login
    };
 
@@ -57,21 +58,21 @@ export default function Home() {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      {/* Add Logout button */}
-       {/* <Button onClick={handleLogout} variant="outline" className="mb-4 float-right">
-         {t('logoutButton')} // Assuming you add 'logoutButton' to your translations
-       </Button> */}
       <Tabs defaultValue="search" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6"> {/* Updated to grid-cols-3 */}
+        <TabsList className="grid w-full grid-cols-4 mb-6"> {/* Updated to grid-cols-4 */}
           <TabsTrigger value="search">{t('searchTab')}</TabsTrigger>
-          <TabsTrigger value="view">{t('viewTab')}</TabsTrigger> {/* New Tab Trigger */}
+          <TabsTrigger value="view">{t('viewTab')}</TabsTrigger>
+          <TabsTrigger value="favorites">{t('favoritesTab')}</TabsTrigger> {/* New Favorites Tab Trigger */}
           <TabsTrigger value="upload">{t('uploadTab')}</TabsTrigger>
         </TabsList>
         <TabsContent value="search">
           <SearchSection />
         </TabsContent>
-        <TabsContent value="view"> {/* New Tab Content */}
+        <TabsContent value="view">
           <PaperList />
+        </TabsContent>
+        <TabsContent value="favorites"> {/* New Favorites Tab Content */}
+          <FavoritesList />
         </TabsContent>
         <TabsContent value="upload">
           <UploadForm />

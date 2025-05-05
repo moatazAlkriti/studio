@@ -4,7 +4,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, List, Trash2, Edit, Download } from "lucide-react" // Added Edit, Trash2, Download icons
+import { FileText, List, Trash2, Edit, Download, Heart } from "lucide-react" // Added Heart icon
 import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
@@ -48,30 +48,30 @@ type Paper = StoredPaper;
 
 export function PaperList() {
   const t = useTranslations('PaperList');
-  const tEdit = useTranslations('EditPaperForm'); // Translations for the edit form
-  const tNotify = useTranslations('Notifications'); // Notification translations
+  const tEdit = useTranslations('EditPaperForm');
+  const tNotify = useTranslations('Notifications');
   const { toast } = useToast();
   const [papers, setPapers] = useState<Paper[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [paperToDelete, setPaperToDelete] = useState<Paper | null>(null); // State for delete confirmation
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
-  const [editingPaper, setEditingPaper] = useState<Paper | null>(null); // State for paper being edited
-  const [currentUsername, setCurrentUsername] = useState<string | null>(null); // State for current user
+  const [paperToDelete, setPaperToDelete] = useState<Paper | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingPaper, setEditingPaper] = useState<Paper | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [favoritePaperIds, setFavoritePaperIds] = useState<Set<string>>(new Set()); // State for favorite paper IDs
 
   useEffect(() => {
-    // Ensure this runs only on the client
     setIsClient(true);
     const username = localStorage.getItem('researchHubUsername');
     if (username === 'admin') {
       setIsAdmin(true);
     }
-    setCurrentUsername(username); // Store current username
+    setCurrentUsername(username);
 
-    // Fetch data from localStorage
     setIsLoading(true);
     try {
+        // Load papers
         const storedPapersJSON = localStorage.getItem('researchHubPapers');
         if (storedPapersJSON) {
             const parsedPapers = JSON.parse(storedPapersJSON);
@@ -86,13 +86,30 @@ export function PaperList() {
             setPapers(initialDummyPapers);
             localStorage.setItem('researchHubPapers', JSON.stringify(initialDummyPapers));
         }
+
+        // Load favorites
+        const storedFavoritesJSON = localStorage.getItem('researchHubFavorites');
+        if (storedFavoritesJSON) {
+             const parsedFavorites = JSON.parse(storedFavoritesJSON);
+             if (Array.isArray(parsedFavorites)) {
+                 setFavoritePaperIds(new Set(parsedFavorites));
+             } else {
+                  console.warn("Invalid favorite data format in localStorage, resetting.");
+                  localStorage.setItem('researchHubFavorites', JSON.stringify([])); // Reset if invalid
+                  setFavoritePaperIds(new Set());
+             }
+        } else {
+             setFavoritePaperIds(new Set());
+        }
+
     } catch (error) {
         console.error("Error reading or parsing localStorage:", error);
         setPapers(initialDummyPapers); // Fallback to dummy data on error
+        setFavoritePaperIds(new Set());
     } finally {
         setIsLoading(false);
     }
-  }, []); // Run only once on mount
+  }, []);
 
    // Update local storage when papers change
    useEffect(() => {
@@ -100,7 +117,7 @@ export function PaperList() {
        try {
            localStorage.setItem('researchHubPapers', JSON.stringify(papers));
        } catch (error) {
-           console.error("Error writing to localStorage:", error);
+           console.error("Error writing papers to localStorage:", error);
            toast({
                variant: "destructive",
                title: t('localStorageErrorTitle'),
@@ -109,6 +126,22 @@ export function PaperList() {
        }
      }
    }, [papers, isClient, isLoading, t, toast]);
+
+   // Update favorites in localStorage when favoritePaperIds change
+    useEffect(() => {
+        if (isClient && !isLoading) { // Only run after initial load and if client-side
+            try {
+                localStorage.setItem('researchHubFavorites', JSON.stringify(Array.from(favoritePaperIds)));
+            } catch (error) {
+                console.error("Error writing favorites to localStorage:", error);
+                toast({
+                    variant: "destructive",
+                    title: t('toggleFavoriteErrorTitle'),
+                    description: t('localStorageWriteErrorDescription')
+                });
+            }
+        }
+    }, [favoritePaperIds, isClient, isLoading, t, toast]);
 
   const handleEditPaper = (paper: Paper) => {
     setEditingPaper(paper);
@@ -148,6 +181,13 @@ export function PaperList() {
 
     // Update state (this triggers the useEffect to update localStorage)
     setPapers(prevPapers => prevPapers.filter(paper => paper.id !== paperId));
+    // Also remove from favorites if deleted
+    setFavoritePaperIds(prevIds => {
+        const newIds = new Set(prevIds);
+        newIds.delete(paperId);
+        return newIds;
+    });
+
 
     // Add notification for admin about the deletion
     addNotification(
@@ -190,6 +230,27 @@ export function PaperList() {
      });
    };
 
+   const toggleFavorite = (paperId: string, paperTitle: string) => {
+      setFavoritePaperIds(prevIds => {
+          const newIds = new Set(prevIds);
+          if (newIds.has(paperId)) {
+              newIds.delete(paperId);
+              toast({
+                   title: t('unlikedToastTitle'),
+                   description: t('unlikedToastDescription', { title: paperTitle }),
+               });
+          } else {
+              newIds.add(paperId);
+              toast({
+                   title: t('likedToastTitle'),
+                   description: t('likedToastDescription', { title: paperTitle }),
+               });
+          }
+          return newIds;
+      });
+   };
+
+
   // Format date utility
   const formatDate = (dateString: string | undefined) => {
       if (!dateString) return t('unknownDate');
@@ -224,7 +285,14 @@ export function PaperList() {
                       <div className="flex items-center justify-between mt-3">
                         <Skeleton className="h-8 w-24" /> {/* Skeleton for download button */}
                         <div className="flex space-x-2">
+                             <Skeleton className="h-8 w-8" /> {/* Skeleton for like button */}
                             {/* Skeletons only if admin check would pass */}
+                            {isAdmin && (
+                                <>
+                                    <Skeleton className="h-8 w-16" />
+                                    <Skeleton className="h-8 w-16" />
+                                </>
+                             )}
                         </div>
                       </div>
                    </CardContent>
@@ -260,13 +328,16 @@ export function PaperList() {
                             <Skeleton className="h-4 w-full mb-1" />
                             <Skeleton className="h-4 w-5/6 mb-3" />
                             <div className="flex items-center justify-between mt-3">
-                              <Skeleton className="h-8 w-24" /> {/* Skeleton for download button */}
-                             {isAdmin && ( // Show skeleton buttons for admin
-                                <div className="flex space-x-2">
-                                    <Skeleton className="h-8 w-16" />
-                                    <Skeleton className="h-8 w-16" />
-                                </div>
-                             )}
+                              <Skeleton className="h-8 w-24" />
+                               <div className="flex space-x-2 items-center">
+                                  <Skeleton className="h-8 w-8" /> {/* Like button skeleton */}
+                                  {isAdmin && ( // Show skeleton buttons for admin
+                                    <>
+                                        <Skeleton className="h-8 w-16" />
+                                        <Skeleton className="h-8 w-16" />
+                                    </>
+                                 )}
+                               </div>
                              </div>
                         </CardContent>
                     </Card>
@@ -274,79 +345,94 @@ export function PaperList() {
               </div>
             ) : papers.length > 0 ? (
               <div className="space-y-4">
-                {papers.map((paper) => (
-                  <Card key={paper.id} className="transition-shadow duration-300 hover:shadow-md">
-                    <CardHeader>
-                      <CardTitle className="text-base flex items-center">
-                        <FileText className="mr-2 h-5 w-5 text-primary" />
-                        {paper.title}
-                      </CardTitle>
-                      <CardDescription>
-                         {t('paperByAuthors', { authors: paper.authors })} | {t('uploadedOn', { date: formatDate(paper.uploadDate) })}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{paper.abstract}</p>
-                      <div className="flex items-center justify-between">
-                           <Button
-                             variant="outline"
-                             size="sm"
-                             onClick={() => handleViewOrDownloadPaper(paper)}
-                             disabled={!paper.fileDataUrl}
-                             className="transition-colors duration-200 hover:bg-primary/10"
-                             aria-label={t('downloadActionLabel', { title: paper.title })}
-                            >
-                             <Download className="mr-1 h-4 w-4" />
-                             {t('downloadButton')}
-                           </Button>
+                {papers.map((paper) => {
+                    const isFavorite = favoritePaperIds.has(paper.id);
+                    return (
+                      <Card key={paper.id} className="transition-shadow duration-300 hover:shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-base flex items-center">
+                            <FileText className="mr-2 h-5 w-5 text-primary" />
+                            {paper.title}
+                          </CardTitle>
+                          <CardDescription>
+                             {t('paperByAuthors', { authors: paper.authors })} | {t('uploadedOn', { date: formatDate(paper.uploadDate) })}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{paper.abstract}</p>
+                          <div className="flex items-center justify-between">
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => handleViewOrDownloadPaper(paper)}
+                                 disabled={!paper.fileDataUrl}
+                                 className="transition-colors duration-200 hover:bg-primary/10"
+                                 aria-label={t('downloadActionLabel', { title: paper.title })}
+                                >
+                                 <Download className="mr-1 h-4 w-4" />
+                                 {t('downloadButton')}
+                               </Button>
 
-                         {isAdmin && (
-                           <div className="flex space-x-2">
-                             <Button
-                               variant="outline"
-                               size="sm"
-                               onClick={() => handleEditPaper(paper)}
-                               className="transition-colors duration-200 hover:bg-accent hover:text-accent-foreground"
-                               aria-label={t('editActionLabel', { title: paper.title })}
-                             >
-                               <Edit className="mr-1 h-4 w-4" />
-                               {t('editButton')}
-                             </Button>
-
-                             <AlertDialog open={paperToDelete?.id === paper.id} onOpenChange={(open) => !open && setPaperToDelete(null)}>
-                                <AlertDialogTrigger asChild>
+                               <div className="flex space-x-2 items-center">
                                    <Button
-                                     variant="destructive"
-                                     size="sm"
-                                     className="transition-colors duration-200 hover:bg-destructive/90"
-                                     onClick={() => setPaperToDelete(paper)}
-                                     aria-label={t('deleteActionLabel', { title: paper.title })}
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => toggleFavorite(paper.id, paper.title)}
+                                      aria-label={isFavorite ? t('unlikeActionLabel', {title: paper.title}) : t('likeActionLabel', {title: paper.title})}
+                                      className={`transition-colors duration-200 ${isFavorite ? 'text-destructive hover:bg-destructive/10' : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'}`}
                                    >
-                                     <Trash2 className="mr-1 h-4 w-4" />
-                                     {t('deleteButton')}
+                                      <Heart className={`h-5 w-5 ${isFavorite ? 'fill-destructive' : 'fill-none'}`} />
                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      {t('deleteConfirmDescription', { title: paperToDelete?.title || t('unknownPaperTitle') })}
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel onClick={() => setPaperToDelete(null)}>{t('cancelButton')}</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => paperToDelete && handleDeletePaper(paperToDelete.id)}>
-                                      {t('confirmDeleteButton')}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                             </AlertDialog>
+
+                                   {isAdmin && (
+                                   <>
+                                     <Button
+                                       variant="outline"
+                                       size="sm"
+                                       onClick={() => handleEditPaper(paper)}
+                                       className="transition-colors duration-200 hover:bg-accent hover:text-accent-foreground"
+                                       aria-label={t('editActionLabel', { title: paper.title })}
+                                     >
+                                       <Edit className="mr-1 h-4 w-4" />
+                                       {t('editButton')}
+                                     </Button>
+
+                                     <AlertDialog open={paperToDelete?.id === paper.id} onOpenChange={(open) => !open && setPaperToDelete(null)}>
+                                        <AlertDialogTrigger asChild>
+                                           <Button
+                                             variant="destructive"
+                                             size="sm"
+                                             className="transition-colors duration-200 hover:bg-destructive/90"
+                                             onClick={() => setPaperToDelete(paper)}
+                                             aria-label={t('deleteActionLabel', { title: paper.title })}
+                                           >
+                                             <Trash2 className="mr-1 h-4 w-4" />
+                                             {t('deleteButton')}
+                                           </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              {t('deleteConfirmDescription', { title: paperToDelete?.title || t('unknownPaperTitle') })}
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel onClick={() => setPaperToDelete(null)}>{t('cancelButton')}</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => paperToDelete && handleDeletePaper(paperToDelete.id)}>
+                                              {t('confirmDeleteButton')}
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                     </AlertDialog>
+                                   </>
+                                   )}
+                               </div>
                            </div>
-                         )}
-                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        </CardContent>
+                      </Card>
+                    );
+                })}
               </div>
             ) : (
               <p className="text-muted-foreground italic text-center py-4">{t('noPapers')}</p>
