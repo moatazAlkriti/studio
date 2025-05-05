@@ -1,5 +1,5 @@
-# Firebase Studio
+# research pro program 
 
-This is a NextJS starter in Firebase Studio.
+This is a NextJS.
 
 To get started, take a look at src/app/page.tsx.
