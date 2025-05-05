@@ -18,7 +18,7 @@
     "passwordRequiredError": "كلمة المرور مطلوبة."
   },
   "Header": {
-    "brandName": "Master's and doctoral research management and archiving system",
+    "brandName": "نظام إدارة وأرشفة بحوث الماجستير والدكتوراه على الويب",
     "adminLink": "الإدارة",
     "toggleSidebar": "تبديل الشريط الجانبي",
     "language": "اللغة",
@@ -200,7 +200,9 @@
     "likedToastDescription": "تمت إضافة \"{title}\" إلى مفضلتك.",
     "unlikedToastTitle": "تمت الإزالة من المفضلة",
     "unlikedToastDescription": "تمت إزالة \"{title}\" من مفضلتك.",
-    "toggleFavoriteErrorTitle": "خطأ في تحديث المفضلة"
+    "toggleFavoriteErrorTitle": "خطأ في تحديث المفضلة",
+    "subject": "الموضوع",
+    "department": "القسم"
   },
   "FavoritesList": {
     "title": "الأوراق المفضلة",

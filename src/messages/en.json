@@ -18,7 +18,7 @@
     "passwordRequiredError": "Password is required."
   },
   "Header": {
-    "brandName": "Master's and doctoral research management and archiving system",
+    "brandName": "Master's and Doctoral Research Web Management System",
     "adminLink": "Admin",
     "toggleSidebar": "Toggle Sidebar",
     "language": "Language",
@@ -200,7 +200,9 @@
     "likedToastDescription": "\"{title}\" added to your favorites.",
     "unlikedToastTitle": "Removed from Favorites",
     "unlikedToastDescription": "\"{title}\" removed from your favorites.",
-    "toggleFavoriteErrorTitle": "Error Updating Favorites"
+    "toggleFavoriteErrorTitle": "Error Updating Favorites",
+    "subject": "Subject",
+    "department": "Department"
   },
   "FavoritesList": {
     "title": "Favorite Papers",
