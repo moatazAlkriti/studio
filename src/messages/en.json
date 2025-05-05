@@ -1,3 +1,4 @@
+
 {
   "LoginPage": {
     "title": "Login",
@@ -200,7 +201,6 @@
     "description": "Your collection of saved research papers.",
     "noFavorites": "You haven't added any papers to your favorites yet.",
     "unlikeActionLabel": "Remove {title} from favorites"
-    // Other translations like download, date, etc., can be inherited or reused from PaperList/SearchSection if needed
   },
   "EditPaperForm": {
     "dialogTitle": "Edit Paper Details",
