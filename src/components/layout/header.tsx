@@ -222,17 +222,17 @@ export function Header() {
         {/* Navigation Items & Actions */}
         <nav className="flex items-center space-x-1 sm:space-x-2"> {/* Adjusted spacing */}
           {isLoggedIn && isAdmin && ( // Show only if logged in as admin
-            <Button asChild variant="ghost" size="sm" className="transition-colors duration-200 hidden sm:inline-flex"> {/* Added transition */}
-              <Link href="/admin" className="flex items-center">
-                <ShieldCheck className="mr-1 h-4 w-4" />
-                {t('adminLink')}
-              </Link>
+            <Button asChild variant="ghost" size="sm" className="transition-colors duration-200 hidden sm:inline-flex">
+                <Link href="/admin">
+                    <ShieldCheck className="mr-1 h-4 w-4" />
+                    {t('adminLink')}
+                </Link>
             </Button>
           )}
 
           {/* About Us Link */}
-           <Button asChild variant="ghost" size="sm" className="transition-colors duration-200"> {/* Added transition */}
-             <Link href="/about" className="flex items-center">
+           <Button asChild variant="ghost" size="sm" className="transition-colors duration-200">
+             <Link href="/about">
                <Info className="mr-1 h-4 w-4" />
                {t('aboutUsLink')}
              </Link>
@@ -333,5 +333,6 @@ export function Header() {
 //   "unreadIndicatorLabel": "إشعارات غير مقروءة",
 //   "errorTitle": "خطأ في الإشعار",
 //   "errorMarkRead": "تعذر تحديث حالة الإشعار."
+
 
 
