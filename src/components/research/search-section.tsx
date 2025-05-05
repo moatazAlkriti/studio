@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -233,10 +234,7 @@ export function SearchSection() {
                     });
                 }, 0);
            } else {
-                // Revoke the Blob URL after a short delay to allow the browser to load it
-                // This is important for memory management
-                // No need to revoke immediately if using _blank, let the new tab manage it.
-                // Consider revoking on unload if needed.
+                // Optional: Revoke the Blob URL after a delay
                 // setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
            }
 
@@ -353,7 +351,7 @@ export function SearchSection() {
                   )}
                 />
               </div>
-              <Button type="submit" disabled={isLoadingPapers || isSearching} className="w-full md:w-auto">
+              <Button type="submit" disabled={isLoadingPapers || isSearching} className="w-full md:w-auto transition-colors duration-200"> {/* Added transition */}
                 {(isLoadingPapers || isSearching) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
                 {isLoadingPapers ? t('loadingPapersButton') : (isSearching ? t('searchingButton') : t('searchButton'))}
               </Button>
@@ -374,7 +372,7 @@ export function SearchSection() {
                  return (
                    <Card
                      key={result.id}
-                     className="cursor-pointer transition-shadow duration-300 hover:shadow-md"
+                     className="cursor-pointer transition-shadow duration-300 hover:shadow-md" // Added transition/hover
                      onClick={() => handleShowDetails(result)} // Make card clickable
                      aria-label={t('viewDetailsAriaLabel', { title: result.title })} // Accessibility
                    >
@@ -506,7 +504,7 @@ export function SearchSection() {
                     {tPaperList('downloadButton')}
                  </Button>
                  <DialogClose asChild>
-                     <Button type="button" variant="secondary">
+                     <Button type="button" variant="secondary" className="transition-colors duration-200"> {/* Added transition */}
                         {tDialog('closeButton')}
                      </Button>
                  </DialogClose>

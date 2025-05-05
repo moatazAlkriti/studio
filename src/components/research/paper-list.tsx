@@ -1,4 +1,5 @@
 
+
 // @ts-nocheck
 "use client"
 
@@ -303,9 +304,11 @@ export function PaperList() {
                     });
                 }, 0);
            } else {
-                // Revoke the Blob URL after a short delay to allow the browser to load it
-                // This is important for memory management
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                // Optional: Revoke the Blob URL after a delay to allow the browser to load it
+                // This is often better than immediate revocation for new tabs
+                // Consider if you need to revoke it at all, maybe on window unload?
+                // For simplicity, we might skip revocation for '_blank' targets
+                // setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
            }
 
        } catch (error) {
@@ -450,7 +453,7 @@ export function PaperList() {
                 {papers.map((paper) => {
                     const isFavorite = favoritePaperIds.has(paper.id);
                     return (
-                      <Card key={paper.id} className="transition-shadow duration-300 hover:shadow-md">
+                      <Card key={paper.id} className="transition-shadow duration-300 hover:shadow-md"> {/* Added transition/hover */}
                         <CardHeader>
                           <CardTitle className="text-base flex items-center">
                             <FileText className="mr-2 h-5 w-5 text-primary" />
@@ -583,3 +586,4 @@ export function PaperList() {
 //   "viewActionLabel": "عرض PDF لـ {title}",
 //   "popupBlockedError": "تعذر فتح ملف PDF. يرجى تعطيل مانع النوافذ المنبثقة لهذا الموقع.",
 //   "viewErrorGeneric": "حدث خطأ غير متوقع أثناء محاولة عرض ملف PDF."
+

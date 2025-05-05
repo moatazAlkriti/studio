@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -80,6 +81,7 @@ export function UploadForm() {
 
   // Get current username on mount
   useEffect(() => {
+      // Ensure this runs only on the client
       if (typeof window !== 'undefined') {
           setCurrentUsername(localStorage.getItem('researchHubUsername'));
       }
@@ -115,11 +117,14 @@ export function UploadForm() {
     const file = values.file?.[0]; // Get the File object
 
     if (!file) {
-        toast({
-            variant: "destructive",
-            title: t('uploadErrorTitle'),
-            description: t('fileRequiredError'),
-        });
+        // Wrap toast in setTimeout
+        setTimeout(() => {
+            toast({
+                variant: "destructive",
+                title: t('uploadErrorTitle'),
+                description: t('fileRequiredError'),
+            });
+        }, 0);
         setIsUploading(false);
         return;
     }
@@ -159,20 +164,26 @@ export function UploadForm() {
 
 
         // --- Show Success Toast & Reset Form ---
-        toast({
-            title: t('uploadSuccessTitle'),
-            description: t('uploadSuccessDescription', { title: values.title }),
-        });
+        // Wrap toast in setTimeout
+        setTimeout(() => {
+            toast({
+                title: t('uploadSuccessTitle'),
+                description: t('uploadSuccessDescription', { title: values.title }),
+            });
+        }, 0);
         form.reset();
         setFileName(null);
 
     } catch (error) {
         console.error("Error uploading file:", error);
-        toast({
-            variant: "destructive",
-            title: t('uploadErrorTitle'),
-            description: t('uploadErrorDescription'), // Generic error message
-        });
+        // Wrap toast in setTimeout
+        setTimeout(() => {
+            toast({
+                variant: "destructive",
+                title: t('uploadErrorTitle'),
+                description: t('uploadErrorDescription'), // Generic error message
+            });
+        }, 0);
     } finally {
         setIsUploading(false);
     }
@@ -298,7 +309,7 @@ export function UploadForm() {
                    <Button
                      type="button"
                      variant="outline"
-                     className="w-full"
+                     className="w-full transition-colors duration-200" // Added transition
                      onClick={() => document.getElementById('file-upload')?.click()}
                      disabled={isUploading}
                     >
@@ -312,7 +323,7 @@ export function UploadForm() {
                  </FormItem>
                )}
             />
-            <Button type="submit" className="w-full" disabled={isUploading}>
+            <Button type="submit" className="w-full transition-colors duration-200" disabled={isUploading}> {/* Added transition */}
               {isUploading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -334,4 +345,5 @@ export function UploadForm() {
 // ar.json -> Notifications:
 //   "newPaperUploadMessage": "تم رفع ورقة بحثية جديدة بعنوان \"{title}\" بواسطة {username}.",
 //   "unknownUser": "مستخدم غير معروف"
+
 

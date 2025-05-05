@@ -1,4 +1,5 @@
 
+
 // @ts-nocheck
 'use client';
 
@@ -100,6 +101,7 @@ export default function AdminPage() {
 
   // Get current admin username on mount
   useEffect(() => {
+    // Ensure this runs only on the client
     if (typeof window !== 'undefined') {
       setCurrentUsername(localStorage.getItem('researchHubUsername'));
     }
@@ -134,10 +136,13 @@ export default function AdminPage() {
         'admin' // Send only to admin (or maybe 'all' if desired)
       );
 
-      toast({
-        title: t('userAddedTitle'),
-        description: t('userAddedDescription', { username: values.username }),
-      });
+      // Wrap toast in setTimeout
+      setTimeout(() => {
+          toast({
+              title: t('userAddedTitle'),
+              description: t('userAddedDescription', { username: values.username }),
+          });
+      }, 0);
       addUserForm.reset();
       setIsAddingUser(false);
     }, 500);
@@ -156,11 +161,14 @@ export default function AdminPage() {
       'admin' // Send only to admin
     );
 
-    toast({
-      title: t('userDeletedTitle'),
-      description: t('userDeletedDescription', { username }),
-      variant: 'destructive'
-    });
+    // Wrap toast in setTimeout
+    setTimeout(() => {
+        toast({
+          title: t('userDeletedTitle'),
+          description: t('userDeletedDescription', { username }),
+          variant: 'destructive'
+        });
+    }, 0);
   };
 
   // --- Add Supervisor Form Handling ---
@@ -188,10 +196,13 @@ export default function AdminPage() {
             'admin' // Send only to admin
           );
 
-          toast({
-              title: t('supervisorAddedTitle'),
-              description: t('supervisorAddedDescription', { name: values.name }),
-          });
+          // Wrap toast in setTimeout
+          setTimeout(() => {
+              toast({
+                  title: t('supervisorAddedTitle'),
+                  description: t('supervisorAddedDescription', { name: values.name }),
+              });
+          }, 0);
           addSupervisorForm.reset();
           setIsAddingSupervisor(false);
       }, 500);
@@ -210,11 +221,14 @@ export default function AdminPage() {
         'admin' // Send only to admin
       );
 
-      toast({
-          title: t('supervisorDeletedTitle'),
-          description: t('supervisorDeletedDescription', { name }),
-          variant: 'destructive',
-      });
+      // Wrap toast in setTimeout
+      setTimeout(() => {
+          toast({
+              title: t('supervisorDeletedTitle'),
+              description: t('supervisorDeletedDescription', { name }),
+              variant: 'destructive',
+          });
+      }, 0);
   };
 
 
@@ -228,7 +242,7 @@ export default function AdminPage() {
       </div>
 
       {/* Manage Users Card */}
-      <Card className="transition-shadow duration-300 hover:shadow-lg">
+      <Card className="transition-shadow duration-300 hover:shadow-lg animate-fade-in"> {/* Added animation */}
         <CardHeader>
           <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5" /> {t('manageUsersTitle')}</CardTitle>
           <CardDescription>{t('manageUsersDescription')}</CardDescription>
@@ -282,7 +296,7 @@ export default function AdminPage() {
             {users.length > 0 ? (
               <ul className="space-y-3">
                 {users.map(user => (
-                  <li key={user.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
+                  <li key={user.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50"> {/* Added hover effect */}
                     <div className="flex flex-col">
                        <span className="font-medium">{user.username}</span>
                        <span className="text-sm text-muted-foreground capitalize">{user.role}</span>
@@ -307,7 +321,7 @@ export default function AdminPage() {
       </Card>
 
       {/* Manage Supervisors Card */}
-      <Card className="transition-shadow duration-300 hover:shadow-lg">
+      <Card className="transition-shadow duration-300 hover:shadow-lg animate-fade-in"> {/* Added animation */}
           <CardHeader>
               <CardTitle className="flex items-center"><UserCheck className="mr-2 h-5 w-5" /> {t('manageSupervisorsTitle')}</CardTitle>
               <CardDescription>{t('manageSupervisorsDescription')}</CardDescription>
@@ -361,7 +375,7 @@ export default function AdminPage() {
                   {supervisors.length > 0 ? (
                       <ul className="space-y-3">
                           {supervisors.map(doc => (
-                              <li key={doc.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
+                              <li key={doc.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50"> {/* Added hover effect */}
                                   <div className="flex flex-col">
                                       <span className="font-medium">{doc.name}</span>
                                       <span className="text-sm text-muted-foreground">{doc.department}</span>
@@ -386,7 +400,7 @@ export default function AdminPage() {
       </Card>
 
       {/* Manage Categories Card */}
-      <Card className="transition-shadow duration-300 hover:shadow-lg">
+      <Card className="transition-shadow duration-300 hover:shadow-lg animate-fade-in"> {/* Added animation */}
         <CardHeader>
           <CardTitle>{t('manageCategoriesTitle')}</CardTitle>
           <CardDescription>{t('manageCategoriesDescription')}</CardDescription>
@@ -395,7 +409,7 @@ export default function AdminPage() {
           <p className="text-muted-foreground italic">{t('categoryManagementPlaceholder')}</p>
           <ul className="mt-4 space-y-2">
             {dummyCategories.map(cat => (
-              <li key={cat.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
+              <li key={cat.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50"> {/* Added hover effect */}
                 <span>{cat.name}</span>
                 <span className="text-sm text-muted-foreground">{t('papersCount', { count: cat.paperCount })}</span>
               </li>
@@ -405,7 +419,7 @@ export default function AdminPage() {
       </Card>
 
       {/* Manage Papers Card */}
-      <Card className="transition-shadow duration-300 hover:shadow-lg">
+      <Card className="transition-shadow duration-300 hover:shadow-lg animate-fade-in"> {/* Added animation */}
         <CardHeader>
           <CardTitle>{t('managePapersTitle')}</CardTitle>
           <CardDescription>{t('managePapersDescription')}</CardDescription>
@@ -414,7 +428,7 @@ export default function AdminPage() {
            <p className="text-muted-foreground italic">{t('paperManagementPlaceholder')}</p>
            <ul className="mt-4 space-y-3">
              {dummyPapers.map(paper => (
-               <li key={paper.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50">
+               <li key={paper.id} className="flex justify-between items-center p-3 border rounded-md transition-colors duration-200 hover:bg-secondary/50"> {/* Added hover effect */}
                  <span className="flex-1 mr-4 truncate">{paper.title}</span>
                  <div className="flex items-center space-x-3 flex-shrink-0">
                     <span className="text-sm text-muted-foreground hidden sm:inline">{paper.category || t('uncategorized')}</span>

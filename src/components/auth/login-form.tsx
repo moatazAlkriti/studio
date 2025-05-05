@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { LogIn } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { addNotification } from '@/lib/notifications'; // Import the notification utility
 
@@ -36,6 +37,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const tNotify = useTranslations('Notifications'); // Notifications translations
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false); // State to ensure client-side execution
+
+  useEffect(() => {
+      setIsClient(true); // Set client state to true once mounted
+  }, []);
 
   // Create schema with translations
   const formSchema = getFormSchema(t);
@@ -43,8 +49,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
-      password: '',
+      username: 'user', // Default username
+      password: 'user', // Default password
     },
   });
 
@@ -52,17 +58,18 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
     // Simulate authentication check
     setTimeout(() => {
-      // Simple check for default user or any other valid user (replace with actual auth logic)
-      // Check for 'user'/'user' or 'admin'/'admin' or any other non-empty credentials for demo
+      // Check for 'user'/'user' or 'admin'/'admin'
       const isValidUser = (values.username === 'user' && values.password === 'user') ||
-                          (values.username === 'admin' && values.password === 'admin') ||
-                          (values.username.length > 0 && values.password.length > 0 && values.username !== 'user' && values.username !== 'admin');
+                          (values.username === 'admin' && values.password === 'admin');
 
       if (isValidUser) {
-        toast({
-          title: t('loginSuccessTitle'),
-          description: t('loginSuccessDescription', { username: values.username }),
-        });
+        // Wrap toast in setTimeout
+        setTimeout(() => {
+            toast({
+              title: t('loginSuccessTitle'),
+              description: t('loginSuccessDescription', { username: values.username }),
+            });
+        }, 0);
         // Store login status and username (for header check)
         if (typeof window !== 'undefined') {
             localStorage.setItem('isLoggedInResearchHub', 'true');
@@ -80,11 +87,14 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         onLoginSuccess();
       } else {
         // Handle invalid login
-        toast({
-          variant: 'destructive',
-          title: t('loginFailedTitle'),
-          description: t('loginFailedDescription'),
-        });
+        // Wrap toast in setTimeout
+        setTimeout(() => {
+            toast({
+              variant: 'destructive',
+              title: t('loginFailedTitle'),
+              description: t('loginFailedDescription'),
+            });
+        }, 0);
         form.setError('username', { type: 'manual', message: ' ' }); // Add error without specific message
         form.setError('password', { type: 'manual', message: t('invalidCredentialsError') });
         form.setValue('password', ''); // Clear password field
@@ -96,6 +106,12 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       setIsLoading(false);
     }, 500); // Simulate network delay
   }
+
+  // Only render the form on the client-side after hydration
+  if (!isClient) {
+      return null; // Or a loading spinner/skeleton
+  }
+
 
   return (
     <Card className="w-full max-w-sm mx-auto animate-fade-in"> {/* Added subtle fade-in animation */}
@@ -132,7 +148,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full transition-transform duration-200 hover:scale-[1.02]" disabled={isLoading}>
+            <Button type="submit" className="w-full transition-transform duration-200 hover:scale-[1.02]" disabled={isLoading}> {/* Added hover scale effect */}
               <LogIn className="mr-2 h-4 w-4" /> {isLoading ? t('loggingInButton') : t('loginButton')}
             </Button>
           </form>

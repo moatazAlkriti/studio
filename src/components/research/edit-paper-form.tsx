@@ -1,4 +1,5 @@
 
+
 // @ts-nocheck
 "use client";
 
@@ -66,6 +67,7 @@ export function EditPaperForm({
 
   // Get current username on mount
   useEffect(() => {
+    // Ensure this runs only on the client
     if (typeof window !== 'undefined') {
       setCurrentUsername(localStorage.getItem('researchHubUsername'));
     }
@@ -176,11 +178,11 @@ export function EditPaperForm({
             />
             <DialogFooter className="mt-6">
                <DialogClose asChild>
-                  <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+                  <Button type="button" variant="outline" onClick={onClose} disabled={isSaving} className="transition-colors duration-200"> {/* Added transition */}
                     {t('cancelButton')}
                   </Button>
                </DialogClose>
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={isSaving} className="transition-colors duration-200"> {/* Added transition */}
                 {isSaving ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}

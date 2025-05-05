@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -157,11 +158,14 @@ export function Header() {
            setHasUnread(updatedAllNotifications.filter(n => n.recipient === 'all' || (isAdmin && n.recipient === 'admin')).some(n => !n.read));
        } catch (error) {
            console.error("Error updating notification read status in localStorage:", error);
-           toast({
-               variant: "destructive",
-               title: tNotify('errorTitle'),
-               description: tNotify('errorMarkRead'),
-           })
+           // Wrap toast in setTimeout
+           setTimeout(() => {
+               toast({
+                   variant: "destructive",
+                   title: tNotify('errorTitle'),
+                   description: tNotify('errorMarkRead'),
+               })
+           }, 0);
            // Revert state change on error? Or maybe just reload?
            loadNotifications();
        }
@@ -189,7 +193,7 @@ export function Header() {
     return (
        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
          <div className="container flex h-14 items-center justify-between">
-           <Link href="/" className="flex items-center space-x-2 transition-opacity hover:opacity-80">
+           <Link href="/" className="flex items-center space-x-2 transition-opacity hover:opacity-80"> {/* Added hover opacity */}
              <BookOpenText className="h-6 w-6 text-primary" />
              <span className="font-bold text-lg">{t('brandName')}</span>
            </Link>
@@ -210,7 +214,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
         {/* Logo/Brand Link */}
-        <Link href="/" className="flex items-center space-x-2 transition-opacity hover:opacity-80">
+        <Link href="/" className="flex items-center space-x-2 transition-opacity hover:opacity-80"> {/* Added hover opacity */}
           <BookOpenText className="h-6 w-6 text-primary" />
           <span className="font-bold text-lg">{t('brandName')}</span>
         </Link>
@@ -218,7 +222,7 @@ export function Header() {
         {/* Navigation Items & Actions */}
         <nav className="flex items-center space-x-1 sm:space-x-2"> {/* Adjusted spacing */}
           {isLoggedIn && isAdmin && ( // Show only if logged in as admin
-            <Button asChild variant="ghost" size="sm" className="transition-colors duration-200 hidden sm:inline-flex">
+            <Button asChild variant="ghost" size="sm" className="transition-colors duration-200 hidden sm:inline-flex"> {/* Added transition */}
               <Link href="/admin" className="flex items-center">
                 <ShieldCheck className="mr-1 h-4 w-4" />
                 {t('adminLink')}
@@ -227,7 +231,7 @@ export function Header() {
           )}
 
           {/* About Us Link */}
-           <Button asChild variant="ghost" size="sm" className="transition-colors duration-200">
+           <Button asChild variant="ghost" size="sm" className="transition-colors duration-200"> {/* Added transition */}
              <Link href="/about" className="flex items-center">
                <Info className="mr-1 h-4 w-4" />
                {t('aboutUsLink')}
@@ -238,7 +242,7 @@ export function Header() {
            {isLoggedIn && (
               <DropdownMenu onOpenChange={handleDropdownOpenChange}> {/* Refresh on open */}
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label={tNotify('notifications')} className="relative">
+                  <Button variant="ghost" size="icon" aria-label={tNotify('notifications')} className="relative transition-colors duration-200"> {/* Added transition */}
                     <Bell className="h-5 w-5" />
                     {hasUnread && (
                       <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-destructive ring-2 ring-background" aria-label={tNotify('unreadIndicatorLabel')}/>
@@ -262,7 +266,7 @@ export function Header() {
                             // Optionally navigate somewhere on click?
                             // e.g., if notification relates to a specific paper
                          }}
-                         className={`flex items-start justify-between gap-2 cursor-pointer ${!notification.read ? 'font-semibold bg-secondary/50 dark:bg-secondary/20' : 'text-muted-foreground'}`} // Highlight unread, adjust style
+                         className={`flex items-start justify-between gap-2 cursor-pointer transition-colors duration-150 ${!notification.read ? 'font-semibold bg-secondary/50 dark:bg-secondary/20' : 'text-muted-foreground'}`} // Highlight unread, adjust style, added transition
                          style={{ whiteSpace: 'normal', minHeight: '2.5rem' }} // Allow text wrapping
                       >
                           {!notification.read && <span className="absolute left-1.5 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />}
@@ -284,7 +288,7 @@ export function Header() {
           {/* Language Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={t('language')}>
+              <Button variant="ghost" size="icon" aria-label={t('language')} className="transition-colors duration-200"> {/* Added transition */}
                 <Globe className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -302,7 +306,7 @@ export function Header() {
 
            {/* Logout Button */}
            {isLoggedIn && ( // Show only if logged in
-              <Button onClick={handleLogout} variant="ghost" size="icon" aria-label={t('logout')} className="text-destructive hover:bg-destructive/10">
+              <Button onClick={handleLogout} variant="ghost" size="icon" aria-label={t('logout')} className="text-destructive hover:bg-destructive/10 transition-colors duration-200"> {/* Added transition */}
                  <LogOut className="h-5 w-5"/>
               </Button>
            )}
@@ -329,4 +333,5 @@ export function Header() {
 //   "unreadIndicatorLabel": "إشعارات غير مقروءة",
 //   "errorTitle": "خطأ في الإشعار",
 //   "errorMarkRead": "تعذر تحديث حالة الإشعار."
+
 

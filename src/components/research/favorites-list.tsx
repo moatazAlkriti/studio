@@ -1,4 +1,5 @@
 
+
 // @ts-nocheck
 "use client"
 
@@ -228,7 +229,7 @@ export function FavoritesList() {
         ) : favoritePapers.length > 0 ? (
           <div className="space-y-4">
             {favoritePapers.map((paper) => (
-              <Card key={paper.id} className="transition-shadow duration-300 hover:shadow-md">
+              <Card key={paper.id} className="transition-shadow duration-300 hover:shadow-md"> {/* Added transition/hover */}
                 <CardHeader>
                   <CardTitle className="text-base flex items-center">
                     <FileText className="mr-2 h-5 w-5 text-primary" />

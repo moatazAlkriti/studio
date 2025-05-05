@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ export default function AboutPage() {
 
   return (
     <div className="space-y-8">
+      {/* Added animation and hover effect */}
       <Card className="transition-shadow duration-300 hover:shadow-lg animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center text-2xl">
@@ -73,3 +75,4 @@ export default function AboutPage() {
     </div>
   );
 }
+
