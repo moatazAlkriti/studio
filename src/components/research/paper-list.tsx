@@ -125,7 +125,8 @@ export function PaperList() {
            })
        }
      }
-   }, [papers, isClient, isLoading, t, toast]);
+     // Removed `t` and `toast` from dependencies as they are stable
+   }, [papers, isClient, isLoading]);
 
    // Update favorites in localStorage when favoritePaperIds change
     useEffect(() => {
@@ -141,7 +142,8 @@ export function PaperList() {
                 });
             }
         }
-    }, [favoritePaperIds, isClient, isLoading, t, toast]);
+        // Removed `t` and `toast` from dependencies as they are stable
+    }, [favoritePaperIds, isClient, isLoading]);
 
   const handleEditPaper = (paper: Paper) => {
     setEditingPaper(paper);
@@ -151,6 +153,8 @@ export function PaperList() {
    const handleSaveChanges = (updatedData: EditPaperData) => {
      if (!editingPaper) return;
 
+     const originalTitle = editingPaper.title; // Store original title before update
+
      setPapers(prevPapers =>
        prevPapers.map(p =>
          p.id === editingPaper.id
@@ -158,6 +162,17 @@ export function PaperList() {
            : p
        )
      );
+
+      // Add notification for admin about the update
+      if (editingPaper.id) {
+        addNotification(
+          tNotify('paperUpdatedMessage', {
+              title: originalTitle, // Use original title for reference
+              username: currentUsername || tNotify('unknownUser'),
+          }),
+          'admin' // Send to admin
+        );
+      }
 
      toast({
        title: tEdit('editSuccessTitle'),

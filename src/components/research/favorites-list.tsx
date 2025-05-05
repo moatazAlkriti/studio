@@ -81,7 +81,8 @@ export function FavoritesList() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, tPaperList]); // Rerun if toast or translations change (though unlikely needed)
+    // Removed `toast` and `tPaperList` from dependencies as they are stable
+  }, []);
 
   // Update favorites in localStorage when favoritePaperIds change
   useEffect(() => {
@@ -99,7 +100,8 @@ export function FavoritesList() {
               });
           }
       }
-  }, [favoritePaperIds, allPapers, isClient, isLoading, toast, tPaperList]);
+      // Removed `toast` and `tPaperList` from dependencies as they are stable
+  }, [favoritePaperIds, allPapers, isClient, isLoading]);
 
   const handleUnlike = (paperId: string, paperTitle: string) => {
       setFavoritePaperIds(prevIds => {

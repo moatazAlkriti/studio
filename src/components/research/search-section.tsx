@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -120,7 +121,8 @@ export function SearchSection() {
                });
            }
        }
-   }, [favoritePaperIds, isLoadingPapers, t, tPaperList, toast]);
+       // Removed `t`, `tPaperList`, and `toast` from dependencies as they are stable
+   }, [favoritePaperIds, isLoadingPapers]);
 
 
   function onSubmit(values: z.infer<typeof searchSchema>) {
