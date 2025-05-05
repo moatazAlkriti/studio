@@ -1,11 +1,9 @@
-
-
 // @ts-nocheck
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Heart, Download } from "lucide-react" // Using Heart for Favorites section icon
+import { FileText, Heart, Download, Eye } from "lucide-react" // Using Heart for Favorites section icon, added Eye
 import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -153,6 +151,63 @@ export function FavoritesList() {
      }, 0);
    };
 
+   // Add handleViewPaper function (copied from paper-list.tsx)
+   const handleViewPaper = (paper: Paper) => {
+       if (!paper.fileDataUrl) {
+           setTimeout(() => {
+               toast({
+                   variant: "destructive",
+                   title: tPaperList('viewErrorTitle'),
+                   description: tPaperList('viewErrorNoData'),
+               });
+           }, 0);
+           return;
+       }
+
+       try {
+           // Convert data URL to Blob
+           const byteString = atob(paper.fileDataUrl.split(',')[1]);
+           const mimeString = paper.fileDataUrl.split(',')[0].split(':')[1].split(';')[0];
+           const ab = new ArrayBuffer(byteString.length);
+           const ia = new Uint8Array(ab);
+           for (let i = 0; i < byteString.length; i++) {
+               ia[i] = byteString.charCodeAt(i);
+           }
+           const blob = new Blob([ab], { type: mimeString });
+
+           // Create a Blob URL
+           const blobUrl = URL.createObjectURL(blob);
+
+           // Open the Blob URL in a new tab
+           const newWindow = window.open(blobUrl, '_blank');
+
+           if (!newWindow) {
+                // Handle popup blocker
+                setTimeout(() => {
+                    toast({
+                        variant: "destructive",
+                        title: tPaperList('viewErrorTitle'),
+                        description: tPaperList('popupBlockedError'), // Add this translation
+                    });
+                }, 0);
+           } else {
+                // Optional: Revoke the Blob URL after a delay
+                // setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+           }
+
+       } catch (error) {
+           console.error("Error creating or opening Blob URL:", error);
+           setTimeout(() => {
+               toast({
+                   variant: "destructive",
+                   title: tPaperList('viewErrorTitle'),
+                   description: tPaperList('viewErrorGeneric'), // Add this translation
+               });
+           }, 0);
+       }
+   };
+
+
   const formatDate = (dateString: string | undefined) => {
       if (!dateString) return tPaperList('unknownDate');
       try {
@@ -183,7 +238,10 @@ export function FavoritesList() {
                      <Skeleton className="h-4 w-full mb-1" />
                      <Skeleton className="h-4 w-5/6 mb-3" />
                       <div className="flex items-center justify-between mt-3">
-                        <Skeleton className="h-8 w-24" /> {/* Download */}
+                        <div className="flex space-x-2">
+                            <Skeleton className="h-8 w-20" /> {/* View */}
+                            <Skeleton className="h-8 w-24" /> {/* Download */}
+                        </div>
                         <Skeleton className="h-8 w-8" /> {/* Unlike */}
                       </div>
                    </CardContent>
@@ -219,8 +277,11 @@ export function FavoritesList() {
                         <Skeleton className="h-4 w-full mb-1" />
                         <Skeleton className="h-4 w-5/6 mb-3" />
                         <div className="flex items-center justify-between mt-3">
-                          <Skeleton className="h-8 w-24" />
-                          <Skeleton className="h-8 w-8" />
+                          <div className="flex space-x-2">
+                            <Skeleton className="h-8 w-20" /> {/* View */}
+                            <Skeleton className="h-8 w-24" /> {/* Download */}
+                          </div>
+                          <Skeleton className="h-8 w-8" /> {/* Unlike */}
                         </div>
                     </CardContent>
                 </Card>
@@ -243,18 +304,31 @@ export function FavoritesList() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{paper.abstract}</p>
-                  <div className="flex items-center justify-between">
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => handleDownloadPaper(paper)}
-                         disabled={!paper.fileDataUrl}
-                         className="transition-colors duration-200 hover:bg-primary/10"
-                         aria-label={tPaperList('downloadActionLabel', { title: paper.title })}
-                        >
-                         <Download className="mr-1 h-4 w-4" />
-                         {tPaperList('downloadButton')}
-                       </Button>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                       <div className="flex space-x-2 flex-wrap gap-2">
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => handleViewPaper(paper)}
+                             disabled={!paper.fileDataUrl}
+                             className="transition-colors duration-200 hover:bg-secondary/80"
+                             aria-label={tPaperList('viewActionLabel', { title: paper.title })}
+                           >
+                             <Eye className="mr-1 h-4 w-4" />
+                             {tPaperList('viewButton')}
+                           </Button>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => handleDownloadPaper(paper)}
+                             disabled={!paper.fileDataUrl}
+                             className="transition-colors duration-200 hover:bg-primary/10"
+                             aria-label={tPaperList('downloadActionLabel', { title: paper.title })}
+                            >
+                             <Download className="mr-1 h-4 w-4" />
+                             {tPaperList('downloadButton')}
+                           </Button>
+                       </div>
 
                        <Button
                           variant="ghost"
